@@ -8,11 +8,20 @@ setup(
     version='0.0.0',
     packages=[package_name],
     data_files=[
-        (os.path.join('share', package_name), ['package.xml']),
-        (os.path.join('share', package_name, 'launch'), ['launch/demo.launch.py']),
-        (os.path.join('share', package_name, 'config'), ['config/costmap.txt']),
+        # Resource file
         (os.path.join('share', 'ament_index', 'resource_index', 'packages'),
-            [os.path.join('resource', package_name)]),
+         [os.path.join('resource', package_name)]),
+        
+        # Package.xml
+        (os.path.join('share', package_name), ['package.xml']),
+        
+        # Launch files
+        (os.path.join('share', package_name, 'launch'), 
+         [os.path.join('launch', 'demo.launch.py')]),
+        
+        # Config files
+        (os.path.join('share', package_name, 'config'), 
+         [os.path.join('config', 'costmap.txt')])
     ],
     install_requires=['setuptools'],
     zip_safe=True,

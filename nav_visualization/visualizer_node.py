@@ -89,6 +89,11 @@ class PathPlanningVisualizer(Node):
         center = (x * cell_width + cell_width/2, y * cell_height + cell_height/2)
         radius = min(cell_width, cell_height) / 3
         pygame.draw.circle(self.screen, (255, 0, 0), center, radius)
+        pygame.draw.rect(self.screen, "green", ((x-1) * cell_width, y * cell_height, cell_width, cell_height))
+        pygame.draw.rect(self.screen, "green", ((x+1) * cell_width, y * cell_height, cell_width, cell_height))
+        pygame.draw.rect(self.screen, "green", ((x) * cell_width, (y-1) * cell_height, cell_width, cell_height))
+        pygame.draw.rect(self.screen, "green", ((x) * cell_width, (y+1) * cell_height, cell_width, cell_height))
+        
 
     def visualization_loop(self):
         """Main visualization loop"""
