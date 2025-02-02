@@ -122,7 +122,7 @@ class LocalPlanningVisualizer(Node):
 
         # TODO draw a shape that has a direction
         center = (x * self.cell_width, y * self.cell_height)
-        radius = min(self.cell_width, self.cell_height) / 3
+        radius = min(self.cell_width, self.cell_height) // 3
         pygame.draw.circle(self.screen, (255, 0, 0), center, radius)
         self.draw_robot_direction()
         
@@ -138,15 +138,18 @@ class LocalPlanningVisualizer(Node):
 
       tip_x = x + arrow_length * math.cos(theta)
       tip_y = y + arrow_length * math.sin(theta)
+      wing_size = min(self.cell_width, self.cell_height) // 3
+      arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
+
 
       # Calculate arrowhead points
-      left_wing = (tip_x - 15 * math.cos(theta - math.pi / 6), 
-                  tip_y - 15 * math.sin(theta - math.pi / 6))
-      right_wing = (tip_x - 15 * math.cos(theta + math.pi / 6), 
-                    tip_y - 15 * math.sin(theta + math.pi / 6))
+      left_wing = (tip_x - wing_size * math.cos(theta - math.pi / 6), 
+                  tip_y - wing_size * math.sin(theta - math.pi / 6))
+      right_wing = (tip_x - wing_size * math.cos(theta + math.pi / 6), 
+                    tip_y - wing_size * math.sin(theta + math.pi / 6))
 
       # Draw main arrow line
-      pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), 5)
+      pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), arrow_line_width)
 
       # Draw arrowhead
       pygame.draw.polygon(self.screen, color, [left_wing, (tip_x, tip_y), right_wing])

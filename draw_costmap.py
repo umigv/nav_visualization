@@ -2,7 +2,7 @@ import pygame
 import sys
 
 def create_grid(width, height, cell_size):
-    return [[0 for _ in range(width)] for _ in range(height)]
+    return [[255 for _ in range(width)] for _ in range(height)]
 
 def save_costmap(grid, filename="costmap.txt"):
     with open(filename, 'w') as f:
@@ -13,7 +13,7 @@ def save_costmap(grid, filename="costmap.txt"):
 def draw_grid(screen, grid, cell_size):
     for row_idx, row in enumerate(grid):
         for col_idx, cell in enumerate(row):
-            color = (255, 255, 255) if cell == 0 else (0, 0, 0)
+            color = (255, 255, 255) if cell == 255 else (0, 0, 0)
             pygame.draw.rect(screen, color, (col_idx * cell_size, row_idx * cell_size, cell_size, cell_size))
             pygame.draw.rect(screen, (200, 200, 200), (col_idx * cell_size, row_idx * cell_size, cell_size, cell_size), 1)
 
@@ -48,7 +48,7 @@ def main():
             x, y = pygame.mouse.get_pos()
             col, row = x // cell_size, y // cell_size
             if 0 <= row < height and 0 <= col < width:
-                grid[row][col] = 255
+                grid[row][col] = 0
 
     save_costmap(grid)
     pygame.quit()
