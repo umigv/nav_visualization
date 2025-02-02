@@ -101,23 +101,19 @@ class LocalPlanningVisualizer(Node):
 
 
         # TODO draw a shape that has a direction
-        center = (x * self.cell_width + self.cell_width/2, y * self.cell_height + self.cell_height/2)
+        center = (x * self.cell_width, y * self.cell_height)
         radius = min(self.cell_width, self.cell_height) / 3
         pygame.draw.circle(self.screen, (255, 0, 0), center, radius)
         self.draw_robot_direction()
-        pygame.draw.rect(self.screen, "green", ((x-1) * self.cell_width, y * self.cell_height, self.cell_width, self.cell_height))
-        pygame.draw.rect(self.screen, "green", ((x+1) * self.cell_width, y * self.cell_height, self.cell_width, self.cell_height))
-        pygame.draw.rect(self.screen, "green", ((x) * self.cell_width, (y-1) * self.cell_height, self.cell_width, self.cell_height))
-        pygame.draw.rect(self.screen, "green", ((x) * self.cell_width, (y+1) * self.cell_height, self.cell_width, self.cell_height))
         
 
-    def draw_robot_direction(self, color=(0, 0, 255)):
+    def draw_robot_direction(self, color=(0, 255, 0)):
       """Draws a robot as an arrow at a given position and angle."""
 
       arrow_length = min(self.cell_width, self.cell_height)
       # Calculate arrow tip (end point)
-      x = self.robot_pose[0]
-      y = self.robot_pose[1]
+      x = self.robot_pose[0] * self.cell_width 
+      y = self.robot_pose[1] * self.cell_height
       theta = self.robot_pose[2]
 
       tip_x = x + arrow_length * math.cos(theta)
@@ -130,7 +126,7 @@ class LocalPlanningVisualizer(Node):
                     tip_y - 15 * math.sin(theta + math.pi / 6))
 
       # Draw main arrow line
-      pygame.draw.line(self.screen, color, self.robot_pose[:2], (tip_x, tip_y), 5)
+      pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), 5)
 
       # Draw arrowhead
       pygame.draw.polygon(self.screen, color, [left_wing, (tip_x, tip_y), right_wing])
