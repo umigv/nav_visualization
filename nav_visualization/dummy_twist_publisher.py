@@ -5,11 +5,14 @@ from geometry_msgs.msg import Twist
 import time
 import math
 
+#this should be the same as the topic in lp_vis
+TOPIC = '/robot_twist'
+
 class TwistPublisher(Node):
     def __init__(self):
         super().__init__('twist_publisher')
         # Create publisher
-        self.publisher_ = self.create_publisher(Twist, '/robot_twist', 10)
+        self.publisher_ = self.create_publisher(Twist, TOPIC, 10)
         
         # Create timer to publish messages
         timer_period = 0.1  # seconds

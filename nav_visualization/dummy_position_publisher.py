@@ -4,6 +4,9 @@ from rclpy.node import Node
 from geometry_msgs.msg import Point
 import random
 
+#this should be the same as the topic in pp_viz
+TOPIC = '/robot_position'
+
 class DummyPositionPublisher(Node):
     def __init__(self):
         super().__init__('position_publisher')

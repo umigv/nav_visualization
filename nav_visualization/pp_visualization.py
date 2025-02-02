@@ -5,29 +5,47 @@ from geometry_msgs.msg import Point
 import pygame
 import numpy as np
 import threading
+from ament_index_python.packages import get_package_share_directory
+import os
+
+# This should be set to the topic that the path planning node is publishing to, 
+# so that it can be visualized
+TOPIC = '/robot_position'
+
+#parameters
+WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 600
+GRID_HEIGHT = 20
+GRID_WIDTH = 20
+COSTMAP_FILE = 'costmap.txt'
+
+
+# dont change these
+pkg_dir = get_package_share_directory('nav_visualization')
+COSTMAP = os.path.join(pkg_dir, 'config', COSTMAP_FILE)
 
 class PathPlanningVisualizer(Node):
     def __init__(self):
         super().__init__('path_planning_visualizer')
         
-        # Declare parameters
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('window_height', 600),
-                ('window_width', 600),
-                ('grid_height', 20),
-                ('grid_width', 20),
-                ('costmap_file', 'costmap.txt')
-            ]
-        )
+        # # Declare parameters
+        # self.declare_parameters(
+        #     namespace='',
+        #     parameters=[
+        #         ('window_height', 600),
+        #         ('window_width', 600),
+        #         ('grid_height', 20),
+        #         ('grid_width', 20),
+        #         ('costmap_file', 'costmap.txt')
+        #     ]
+        # )
         
         # Get parameters
-        self.window_height = self.get_parameter('window_height').value
-        self.window_width = self.get_parameter('window_width').value
-        self.grid_height = self.get_parameter('grid_height').value
-        self.grid_width = self.get_parameter('grid_width').value
-        costmap_file = self.get_parameter('costmap_file').value
+        self.window_height = WINDOW_HEIGHT
+        self.window_width = WINDOW_WIDTH
+        self.grid_height = GRID_HEIGHT
+        self.grid_width = GRID_WIDTH
+        costmap_file = COSTMAP
         
         # Load costmap
         self.costmap = self.read_costmap(costmap_file)
@@ -49,7 +67,7 @@ class PathPlanningVisualizer(Node):
         # Create subscriber
         self.subscription = self.create_subscription(
             Point,
-            '/robot_position',
+            TOPIC,
             self.position_callback,
             10)
         
