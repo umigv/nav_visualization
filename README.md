@@ -21,5 +21,5 @@ source install/setup.bash
 run local visualizer:
 ros2 run nav_visualization path_planning_visualizer
 
-run path planning visualizer
+run path planning visualizer:
 ros2 run nav_visualization local_planning_visualizer
