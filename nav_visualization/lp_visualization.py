@@ -120,16 +120,16 @@ class LocalPlanningVisualizer(Node):
         y = max(0, min(self.grid_height - 1, y))
 
 
-        # TODO draw a shape that has a direction
+        
         center = (x * self.cell_width, y * self.cell_height)
         radius = min(self.cell_width, self.cell_height) // 3
         pygame.draw.circle(self.screen, (255, 0, 0), center, radius)
         self.draw_robot_direction()
+        self.draw_robot_velo()
         
 
     def draw_robot_direction(self, color=(0, 255, 0)):
       """Draws a robot as an arrow at a given position and angle."""
-
       arrow_length = min(self.cell_width, self.cell_height)
       # Calculate arrow tip (end point)
       x = self.robot_pose[0] * self.cell_width 
@@ -138,6 +138,42 @@ class LocalPlanningVisualizer(Node):
 
       tip_x = x + arrow_length * math.cos(theta)
       tip_y = y + arrow_length * math.sin(theta)
+      wing_size = min(self.cell_width, self.cell_height) // 3
+      arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
+
+
+      # Calculate arrowhead points
+      left_wing = (tip_x - wing_size * math.cos(theta - math.pi / 6), 
+                  tip_y - wing_size * math.sin(theta - math.pi / 6))
+      right_wing = (tip_x - wing_size * math.cos(theta + math.pi / 6), 
+                    tip_y - wing_size * math.sin(theta + math.pi / 6))
+
+      # Draw main arrow line
+      pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), arrow_line_width)
+
+      # Draw arrowhead
+      pygame.draw.polygon(self.screen, color, [left_wing, (tip_x, tip_y), right_wing])
+
+    def draw_robot_velo(self, color=(230, 255, 0)):
+      """Draws a robot as an arrow at a given position and angle."""
+      magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 3)
+      arrow_length = min(self.cell_width, self.cell_height) * magnitude
+      
+      # Calculate arrow center
+      x = self.robot_pose[0] * self.cell_width 
+      y = self.robot_pose[1] * self.cell_height
+
+      theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
+
+      if (theta > 0 and self.twist.linear.y < 0):
+          theta += math.pi
+
+      if (theta < 0 and self.twist.linear.x < 0):
+          theta += math.pi
+
+      # Calculate arrow tip (end point)
+      tip_x = x + arrow_length * math.cos(theta) 
+      tip_y = y + arrow_length * math.sin(theta) 
       wing_size = min(self.cell_width, self.cell_height) // 3
       arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
 
