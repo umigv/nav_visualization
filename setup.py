@@ -18,6 +18,10 @@ setup(
         # Launch files
         (os.path.join('share', package_name, 'launch'), 
          [os.path.join('launch', 'demo.launch.py')]),
+
+        # Launch 2 files
+        (os.path.join('share', package_name, 'launch'), 
+         [os.path.join('launch', 'demo.launch2.py')]),
         
         # Config files
         (os.path.join('share', package_name, 'config'), 
@@ -31,8 +35,10 @@ setup(
     license='Apache License 2.0',
     entry_points={
         'console_scripts': [
-            'visualizer_node = nav_visualization.visualizer_node:main',
-            'dummy_publisher = nav_visualization.dummy_publisher:main',
+            'path_planning_visualizer = nav_visualization.pp_visualization:main',
+            'local_planning_visualizer = nav_visualization.lp_visualization:main',
+            'dummy_position_publisher = nav_visualization.dummy_position_publisher:main',
+            'dummy_twist_publisher = nav_visualization.dummy_twist_publisher:main',
         ],
     },
 )

@@ -6,7 +6,7 @@ import random
 
 class DummyPositionPublisher(Node):
     def __init__(self):
-        super().__init__('dummy_position_publisher')
+        super().__init__('position_publisher')
         
         # Declare parameters
         self.declare_parameters(

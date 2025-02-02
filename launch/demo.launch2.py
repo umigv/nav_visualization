@@ -14,8 +14,8 @@ def generate_launch_description():
         # Visualization Node
         Node(
             package='nav_visualization',
-            executable='path_planning_visualizer',
-            name='path_planning_visualizer',
+            executable='local_planning_visualizer',  # Match setup.py entry point
+            name='local_planning_visualizer',
             output='screen',
             parameters=[{
                 'window_height': 600,
@@ -29,13 +29,7 @@ def generate_launch_description():
         # Dummy Publisher Node
         Node(
             package='nav_visualization',
-            executable='dummy_position_publisher',
-            name='position_publisher',
-            output='screen',
-            parameters=[{
-                'grid_width': 20,
-                'grid_height': 20,
-                'update_rate': 1.0
-            }]
+            executable='dummy_twist_publisher',
+            name='twist_publisher',
         )
     ])
