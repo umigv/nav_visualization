@@ -28,18 +28,6 @@ class PathPlanningVisualizer(Node):
     def __init__(self):
         super().__init__('path_planning_visualizer')
         
-        # # Declare parameters
-        # self.declare_parameters(
-        #     namespace='',
-        #     parameters=[
-        #         ('window_height', 600),
-        #         ('window_width', 600),
-        #         ('grid_height', 20),
-        #         ('grid_width', 20),
-        #         ('costmap_file', 'costmap.txt')
-        #     ]
-        # )
-        
         # Get parameters
         self.window_height = WINDOW_HEIGHT
         self.window_width = WINDOW_WIDTH

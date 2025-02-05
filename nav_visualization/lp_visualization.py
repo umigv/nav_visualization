@@ -156,14 +156,17 @@ class LocalPlanningVisualizer(Node):
 
     def draw_robot_velo(self, color=(230, 255, 0)):
       """Draws a robot as an arrow at a given position and angle."""
-      magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 3)
+      magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
       arrow_length = min(self.cell_width, self.cell_height) * magnitude
       
       # Calculate arrow center
       x = self.robot_pose[0] * self.cell_width 
       y = self.robot_pose[1] * self.cell_height
 
-      theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
+      if self.twist.linear.x == 0:
+          theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
+      else: 
+          theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
 
       if (theta > 0 and self.twist.linear.y < 0):
           theta += math.pi

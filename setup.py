@@ -43,6 +43,7 @@ setup(
             'local_planning_visualizer = nav_visualization.lp_visualization:main',
             'dummy_position_publisher = nav_visualization.dummy_position_publisher:main',
             'dummy_twist_publisher = nav_visualization.dummy_twist_publisher:main',
+            'grid_publisher = nav_visualization.custom_grid_publisher:main'
         ],
     },
 )
