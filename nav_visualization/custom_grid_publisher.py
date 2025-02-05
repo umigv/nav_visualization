@@ -27,8 +27,8 @@ class GridPublisher(Node):
         pygame.display.set_caption("Draw on Grid for ROS2 OccupancyGrid Publisher")
         # self.timer = self.create_timer(0.1, self.publish_grid)
 
-        self.draw_grid()
-        self.publish_grid()
+        # Timer for periodic grid updates
+        self.timer = self.create_timer(0.1, self.timer_callback)  # Call timer_callback every 0.1 seconds
 
 
     def publish_grid(self):
@@ -56,7 +56,7 @@ class GridPublisher(Node):
         msg.data = data
         self.publisher_.publish(msg)
         self.get_logger().info("Published OccupancyGrid message")
-        # self.draw_grid()
+        
 
     def draw_grid(self):
         # Draw the entire grid in the Pygame window
@@ -70,7 +70,10 @@ class GridPublisher(Node):
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                self.get_logger().info("Exiting program and publishing grid.")
+                self.publish_grid()
                 rclpy.shutdown()
+                pygame.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.drawing = True
             elif event.type == pygame.MOUSEBUTTONUP:
@@ -81,6 +84,8 @@ class GridPublisher(Node):
             col, row = x // self.cell_size, y // self.cell_size
             if 0 <= row < self.grid_height and 0 <= col < self.grid_width:
                 self.grid[row][col] = 0
+    def timer_callback(self):
+        self.draw_grid()
 
 
 def main(args=None):
@@ -93,9 +98,10 @@ def main(args=None):
     node = GridPublisher(width, height, cell_size)
     rclpy.spin(node)
 
+    pygame.quit()
     node.destroy_node()
     rclpy.shutdown()
-    pygame.quit()
+    #pygame.quit()
 
 
 if __name__ == '__main__':
