@@ -80,7 +80,12 @@ class GridPublisher(Node):
         msg.data = data
 
         self.publisher_.publish(msg)
+<<<<<<< HEAD
         self.get_logger().info("OccupancyGrid published!")
+=======
+        self.get_logger().info("Published OccupancyGrid message")
+        
+>>>>>>> ebd77cbdf142df2f5d838eac83c3bd425bfc3ecc
 
     def draw_grid(self):
         # Clear the screen and draw the grid
