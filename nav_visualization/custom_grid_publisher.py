@@ -8,7 +8,7 @@ import threading
 TOPIC = '/custom_grid'
 
 class GridPublisher(Node):
-    def __init__(self, grid_width, grid_height, cell_size):
+    def __init__(self, grid_width, grid_height, cell_size, start, goal):
         super().__init__('grid_publisher')
         
         # Create publisher for OccupancyGrid
@@ -16,6 +16,8 @@ class GridPublisher(Node):
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.cell_size = cell_size
+        self.start = start
+        self.goal = goal
 
         # Flags to track drawing and publishing
         self.complete = False    # True when drawing is done (e.g., window closed)
@@ -37,25 +39,17 @@ class GridPublisher(Node):
 
     def timer_callback(self):
         if self.complete:
-            # If the drawing is complete and we haven't published yet, do so.
             if not self.published:
                 self.publish_grid()
                 self.published = True
                 self.get_logger().info("Published occupancy grid. Preparing to shut down...")
-            # Post a quit event so that Pygame knows to close
             pygame.event.post(pygame.event.Event(pygame.QUIT))
-            print("Quitting pygame...")
-            # Cancel the timer so it doesn't run again.
-            print("Cancelling timer...")
             self.timer.cancel()
-            # Offload ROS shutdown to a separate thread to avoid freezing
             threading.Thread(target=self.shutdown_ros).start()
         else:
-            # Continue processing drawing events
             self.draw_grid()
 
     def shutdown_ros(self):
-        print("Shutting down ROS...")
         rclpy.shutdown()
 
     def publish_grid(self):
@@ -72,7 +66,6 @@ class GridPublisher(Node):
         msg.info.origin.position.z = 0.0
 
         # Convert the grid into occupancy data:
-        # Here 255 (white) is free (0) and any other value (black) is occupied (100)
         data = []
         for row in self.grid:
             for cell in row:
@@ -80,44 +73,44 @@ class GridPublisher(Node):
         msg.data = data
 
         self.publisher_.publish(msg)
-<<<<<<< HEAD
         self.get_logger().info("OccupancyGrid published!")
-=======
-        self.get_logger().info("Published OccupancyGrid message")
-        
->>>>>>> ebd77cbdf142df2f5d838eac83c3bd425bfc3ecc
 
     def draw_grid(self):
         # Clear the screen and draw the grid
         self.screen.fill((255, 255, 255))
         for row_idx, row in enumerate(self.grid):
             for col_idx, cell in enumerate(row):
-                # White for free space, black for occupied
                 color = (255, 255, 255) if cell == 255 else (0, 0, 0)
                 pygame.draw.rect(
                     self.screen, color,
                     (col_idx * self.cell_size, row_idx * self.cell_size,
                      self.cell_size, self.cell_size)
                 )
-                # Draw a thin grid border
                 pygame.draw.rect(
                     self.screen, (200, 200, 200),
                     (col_idx * self.cell_size, row_idx * self.cell_size,
                      self.cell_size, self.cell_size), 1
                 )
+        # Draw start and goal points
+        if self.start:
+            pygame.draw.rect(self.screen, (0, 255, 0),
+                              (self.start[0] * self.cell_size, self.start[1] * self.cell_size,
+                               self.cell_size, self.cell_size))
+        if self.goal:
+            pygame.draw.rect(self.screen, (255, 0, 0),
+                              (self.goal[0] * self.cell_size, self.goal[1] * self.cell_size,
+                               self.cell_size, self.cell_size))
+
         pygame.display.flip()
 
-        # Process pygame events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                # Mark drawing as complete if the window is closed
                 self.complete = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.drawing = True
             elif event.type == pygame.MOUSEBUTTONUP:
                 self.drawing = False
 
-        # If drawing is active, update the cell where the mouse is located.
         if self.drawing:
             x, y = pygame.mouse.get_pos()
             col, row = x // self.cell_size, y // self.cell_size
@@ -126,19 +119,26 @@ class GridPublisher(Node):
                     self.grid[row][col] = 255
                 else:
                     self.grid[row][col] = 0
-                  # Mark cell as occupied
+
 
 def main(args=None):
     rclpy.init(args=args)
-    
+
     width = int(input("Enter grid width: "))
     height = int(input("Enter grid height: "))
     cell_size = int(input("Enter cell size (in pixels): "))
 
-    node = GridPublisher(width, height, cell_size)
+    start_x = int(input("Enter start x coordinate: "))
+    start_y = int(input("Enter start y coordinate: "))
+    goal_x = int(input("Enter goal x coordinate: "))
+    goal_y = int(input("Enter goal y coordinate: "))
+
+    start = (start_x, start_y)
+    goal = (goal_x, goal_y)
+
+    node = GridPublisher(width, height, cell_size, start, goal)
     rclpy.spin(node)
 
-    # After spin returns, clean up.
     print("Destroying node...")
     node.destroy_node()
     print("Quitting pygame...")

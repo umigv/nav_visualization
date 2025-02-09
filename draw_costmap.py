@@ -4,24 +4,44 @@ import sys
 def create_grid(width, height, cell_size):
     return [[255 for _ in range(width)] for _ in range(height)]
 
-def save_costmap(grid, filename="costmap.txt"):
+def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="costmap.txt"):
+
     with open(filename, 'w') as f:
+        f.write(" ".join(map(str,[start_x, start_y])) + "\n")
+        f.write(" ".join(map(str,[goal_x, goal_y])) + "\n")
+
         for row in grid:
             f.write(" ".join(map(str, row)) + "\n")
     print(f"Costmap saved to {filename}")
 
-def draw_grid(screen, grid, cell_size):
+def draw_grid(screen, start_x, start_y, goal_x, goal_y, grid, cell_size):
     for row_idx, row in enumerate(grid):
         for col_idx, cell in enumerate(row):
             color = (255, 255, 255) if cell == 255 else (0, 0, 0)
             pygame.draw.rect(screen, color, (col_idx * cell_size, row_idx * cell_size, cell_size, cell_size))
             pygame.draw.rect(screen, (200, 200, 200), (col_idx * cell_size, row_idx * cell_size, cell_size, cell_size), 1)
+    
+
+        start_center = (start_x * cell_size + cell_size / 2, 
+                        start_y * cell_size + cell_size / 2)
+        goal_center = (goal_x * cell_size + cell_size / 2, 
+                       goal_y * cell_size + cell_size / 2)
+        pygame.draw.circle(screen, (0, 255, 0), start_center, min(cell_size, cell_size) / 3)  # Green for start
+        pygame.draw.circle(screen, (0, 0, 255), goal_center, min(cell_size, cell_size) / 3)  # Blue for goal
+
 
 def main():
     pygame.init()
 
     width = int(input("Enter grid width: "))
     height = int(input("Enter grid height: "))
+
+    start_x = int(input("Enter start x coordinate: "))
+    start_y = int(input("Enter start y coordinate: "))
+    goal_x = int(input("Enter goal x coordinate: "))
+    goal_y = int(input("Enter goal y coordinate: "))
+
+    filename = input("Enter filename to save to (include .txt in the filename): ")
     cell_size = 20  # Size of each cell in pixels
 
     screen = pygame.display.set_mode((width * cell_size, height * cell_size))
@@ -33,7 +53,7 @@ def main():
     running = True
     while running:
         screen.fill((255, 255, 255))
-        draw_grid(screen, grid, cell_size)
+        draw_grid(screen, start_x, start_y, goal_x, goal_y, grid, cell_size)
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -50,7 +70,7 @@ def main():
             if 0 <= row < height and 0 <= col < width:
                 grid[row][col] = 0
 
-    save_costmap(grid)
+    save_costmap(start_x, start_y, goal_x, goal_y, grid, filename)
     pygame.quit()
     sys.exit()
 

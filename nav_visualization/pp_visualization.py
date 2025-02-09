@@ -12,15 +12,14 @@ import os
 # so that it can be visualized
 TOPIC = '/robot_position'
 
-#parameters
+# Parameters
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 600
 GRID_HEIGHT = 20
 GRID_WIDTH = 20
 COSTMAP_FILE = 'costmap.txt'
 
-
-# dont change these
+# Don't change these
 pkg_dir = get_package_share_directory('nav_visualization')
 COSTMAP = os.path.join(pkg_dir, 'config', COSTMAP_FILE)
 
@@ -31,20 +30,19 @@ class PathPlanningVisualizer(Node):
         # Get parameters
         self.window_height = WINDOW_HEIGHT
         self.window_width = WINDOW_WIDTH
-        self.grid_height = GRID_HEIGHT
-        self.grid_width = GRID_WIDTH
         costmap_file = COSTMAP
-        
+
         # Load costmap
         self.costmap = self.read_costmap(costmap_file)
+        self.grid_height, self.grid_width = self.costmap.shape
         
         # Verify costmap dimensions
         if self.costmap.shape != (self.grid_height, self.grid_width):
             self.get_logger().error("Costmap dimensions don't match grid parameters!")
             raise ValueError("Costmap dimensions mismatch")
 
-        # Initialize robot position
-        self.robot_position = [self.grid_width // 2, self.grid_height // 2]
+        # Initialize robot position, start, and goal positions
+        self.robot_position = self.start_position
         self.position_lock = threading.Lock()
 
         # Initialize Pygame
@@ -58,14 +56,24 @@ class PathPlanningVisualizer(Node):
             TOPIC,
             self.position_callback,
             10)
-        
+
         # Create timer for visualization update
         self.timer = self.create_timer(0.1, self.visualization_loop)
 
     def read_costmap(self, file_path):
         """Read costmap from file"""
         with open(file_path, 'r') as f:
-            return np.array([[int(num) for num in line.split()] for line in f])
+            f = f.readlines()
+            coords = f[:2]
+            grid = f[2:]
+
+
+            self.start_position = list(map(int, coords[0].split()))
+            self.goal_position = list(map(int, coords[1].split()))
+
+            costmap = np.array([[int(num) for num in line.split()] for line in grid])
+
+            return costmap
 
     def position_callback(self, msg):
         """Handle position updates"""
@@ -80,26 +88,29 @@ class PathPlanningVisualizer(Node):
         """Draw the visualization"""
         cell_height = self.window_height / self.grid_height
         cell_width = self.window_width / self.grid_width
-        
+
         # Draw costmap
         for y in range(self.grid_height):
             for x in range(self.grid_width):
                 cost = self.costmap[y, x]
                 color = (cost, cost, cost)
                 pygame.draw.rect(self.screen, color,
-                               (x * cell_width, y * cell_height, cell_width, cell_height))
-        
+                                  (x * cell_width, y * cell_height, cell_width, cell_height))
+
+        # Draw start and goal points
+        start_center = (self.start_position[0] * cell_width + cell_width / 2, 
+                        self.start_position[1] * cell_height + cell_height / 2)
+        goal_center = (self.goal_position[0] * cell_width + cell_width / 2, 
+                       self.goal_position[1] * cell_height + cell_height / 2)
+        pygame.draw.circle(self.screen, (0, 255, 0), start_center, min(cell_width, cell_height) / 3)  # Green for start
+        pygame.draw.circle(self.screen, (0, 0, 255), goal_center, min(cell_width, cell_height) / 3)  # Blue for goal
+
         # Draw robot
         with self.position_lock:
             x, y = self.robot_position
-        center = (x * cell_width + cell_width/2, y * cell_height + cell_height/2)
+        center = (x * cell_width + cell_width / 2, y * cell_height + cell_height / 2)
         radius = min(cell_width, cell_height) / 3
-        pygame.draw.circle(self.screen, (255, 0, 0), center, radius)
-        pygame.draw.rect(self.screen, "green", ((x-1) * cell_width, y * cell_height, cell_width, cell_height))
-        pygame.draw.rect(self.screen, "green", ((x+1) * cell_width, y * cell_height, cell_width, cell_height))
-        pygame.draw.rect(self.screen, "green", ((x) * cell_width, (y-1) * cell_height, cell_width, cell_height))
-        pygame.draw.rect(self.screen, "green", ((x) * cell_width, (y+1) * cell_height, cell_width, cell_height))
-        
+        pygame.draw.circle(self.screen, (255, 0, 0), center, radius)  # Red for robot
 
     def visualization_loop(self):
         """Main visualization loop"""
@@ -111,6 +122,7 @@ class PathPlanningVisualizer(Node):
         self.screen.fill((0, 0, 0))
         self.draw_scene()
         pygame.display.flip()
+
 
 def main(args=None):
     rclpy.init(args=args)
