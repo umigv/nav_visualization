@@ -30,6 +30,9 @@ setup(
          # Config files
         (os.path.join('share', package_name, 'config'), 
          [os.path.join('config', 'costmap2.txt')]),
+         # Config files
+        (os.path.join('share', package_name, 'config'), 
+         [os.path.join('config', 'costmap3.txt')]),
 
     ],
     install_requires=['setuptools'],

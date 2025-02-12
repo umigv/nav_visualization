@@ -5,6 +5,7 @@ import pygame
 import numpy as np
 import threading
 import os
+import pyautogui
 
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -17,9 +18,10 @@ from infra_interfaces.msg import Coordinate2D
 from std_msgs.msg import Header
 
 # Parameters
-WINDOW_HEIGHT = 600
-WINDOW_WIDTH = 600
-COSTMAP_FILE = 'costmap2.txt'
+# Set these to none if for auto sizing
+WINDOW_HEIGHT = None
+WINDOW_WIDTH = None
+COSTMAP_FILE = 'costmap3.txt'
 
 # Don't change these
 pkg_dir = get_package_share_directory('nav_visualization')
@@ -32,14 +34,26 @@ class PathPlanningVisualizer(Node):
         self._action_client = ActionClient(self, NavigateToGoal, 'navigate_to_goal')
         
         # Get parameters
-        self.window_height = WINDOW_HEIGHT
-        self.window_width = WINDOW_WIDTH
         costmap_file = COSTMAP
 
         # Load costmap
         self.costmap = self.read_costmap(costmap_file)
         self.grid_height, self.grid_width = self.costmap.shape
 
+        if (not WINDOW_HEIGHT) or (not WINDOW_WIDTH):
+            print("Auto sizing")
+            screen_width, screen_height = pyautogui.size()
+            cell_width = screen_width / self.grid_width
+            cell_height = screen_height / self.grid_height
+            cell_size = int(min(cell_width, cell_height))
+
+            self.window_height = self.grid_height * cell_size
+            self.window_width = self.grid_width * cell_size
+        else: 
+            self.window_height = WINDOW_HEIGHT
+            self.window_width = WINDOW_WIDTH
+            cell_width = WINDOW_WIDTH / self.grid_width
+            cell_height = WINDOW_HEIGHT / self.grid_height
         # Initialize robot position, start, and goal positions
         self.robot_position = self.start_position
 
@@ -175,19 +189,6 @@ class PathPlanningVisualizer(Node):
 
         pygame.display.flip()
 
-    # # TODO Modify this
-    # def visualization_loop(self):
-    #     """Main visualization loop"""
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             self.destroy_node()
-    #             rclpy.shutdown()
-        
-    #     self.screen.fill((0, 0, 0))
-    #     self.draw_scene()
-    #     pygame.display.flip()
-
-
 def main(args=None):
     rclpy.init(args=args)
     visualizer = PathPlanningVisualizer()
@@ -200,23 +201,6 @@ def main(args=None):
         rclpy.shutdown()
         pygame.quit()
 
-# def main(args=None):
-#     rclpy.init(args=args)
-#     visualizer = PathPlanningVisualizer()
-
-#     executor_thread = threading.Thread(target=rclpy.spin, args=(visualizer,), daemon=True)
-#     executor_thread.start()
-
-#     visualizer.send_goal()
-
-#     try:
-#         executor_thread.join()
-#     except KeyboardInterrupt:
-#         pass
-#     finally:
-#         visualizer.destroy_node()
-#         rclpy.shutdown()
-#         pygame.quit()
 
 if __name__ == '__main__':
     main()

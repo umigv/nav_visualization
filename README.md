@@ -1,8 +1,17 @@
 # nav_visualization
 
+## draw_costmap.py
 MAKE A COSTMAP:
-run draw_costmap.py
-close the window
+Make a new terminal, go to your ws
+cd ws
+cd src
+cd nav_visualization
+python3 draw_costmap.py
+
+draw your map
+close the pygame window
+
+### enabling your new map
 put the file you created into the config folder
 adjust the file name in pp_visualization or lp_visualization
 
@@ -11,10 +20,13 @@ add the following lines to setup.py
         (os.path.join('share', package_name, 'config'), 
          [os.path.join('config', 'YOUR FILE NAME')])
 
-to compile:
-colcon build --packages-select nav_visualization
 
-source:
+Open 3 terminals
+
+terminal 1:
+colcon build --packages-select nav_visualization nav_infrastructure
+
+terminal 
 source install/setup.zsh 
 source install/setup.bash
 
