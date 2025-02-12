@@ -29,7 +29,7 @@ class PathPlanningVisualizer(Node):
     def __init__(self):
         super().__init__('path_planning_visualizer')
         
-        self._action_client = ActionClient(self, NavigateToGoal, 'vis_action')
+        self._action_client = ActionClient(self, NavigateToGoal, 'navigate_to_goal')
         
         # Get parameters
         self.window_height = WINDOW_HEIGHT
@@ -52,6 +52,7 @@ class PathPlanningVisualizer(Node):
         self.draw_scene()
 
         #self.create_timer(0.1, self.send_goal)
+        self.send_goal()
 
     def grid_to_occupancy(self):
         msg = OccupancyGrid()
@@ -85,7 +86,7 @@ class PathPlanningVisualizer(Node):
         self.get_logger().info('message created')
 
         msg.costmap = self.grid_to_occupancy()
-        #self.get_logger().info(f'{msg.costmap}')
+        self.get_logger().info(f'{msg}')
         self.get_logger().info('waiting for server')
 
         self._action_client.wait_for_server()
@@ -109,8 +110,8 @@ class PathPlanningVisualizer(Node):
         self._get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
-        result = future.result().result
-        self.get_logger().info('Success state: {0}'.format(result.sequence))
+        result = future.result().success
+        self.get_logger().info('Success state: {0}'.format(result))
         rclpy.shutdown()
     
     def read_costmap(self, file_path):
@@ -134,8 +135,8 @@ class PathPlanningVisualizer(Node):
         self.get_logger().info('Received feedback')
 
         """Handle position updates"""
-        x = int(msg.x)
-        y = int(msg.y)
+        x = int(msg.distance_from_start.position.x)
+        y = int(msg.distance_from_start.position.y)
         x = max(0, min(self.grid_width - 1, x))
         y = max(0, min(self.grid_height - 1, y))
         self.robot_position = [x, y]
@@ -187,35 +188,35 @@ class PathPlanningVisualizer(Node):
     #     pygame.display.flip()
 
 
-# def main(args=None):
-#     rclpy.init(args=args)
-#     visualizer = PathPlanningVisualizer()
-#     try:
-#         rclpy.spin(visualizer)
-#     except KeyboardInterrupt:
-#         pass
-#     finally:
-#         visualizer.destroy_node()
-#         rclpy.shutdown()
-#         pygame.quit()
-
 def main(args=None):
     rclpy.init(args=args)
     visualizer = PathPlanningVisualizer()
-
-    executor_thread = threading.Thread(target=rclpy.spin, args=(visualizer,), daemon=True)
-    executor_thread.start()
-
-    visualizer.send_goal()
-
     try:
-        executor_thread.join()
+        rclpy.spin(visualizer)
     except KeyboardInterrupt:
         pass
     finally:
         visualizer.destroy_node()
         rclpy.shutdown()
         pygame.quit()
+
+# def main(args=None):
+#     rclpy.init(args=args)
+#     visualizer = PathPlanningVisualizer()
+
+#     executor_thread = threading.Thread(target=rclpy.spin, args=(visualizer,), daemon=True)
+#     executor_thread.start()
+
+#     visualizer.send_goal()
+
+#     try:
+#         executor_thread.join()
+#     except KeyboardInterrupt:
+#         pass
+#     finally:
+#         visualizer.destroy_node()
+#         rclpy.shutdown()
+#         pygame.quit()
 
 if __name__ == '__main__':
     main()

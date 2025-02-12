@@ -1,7 +1,7 @@
 import pygame
 import sys
 
-def create_grid(width, height, cell_size):
+def create_grid(width, height):
     return [[255 for _ in range(width)] for _ in range(height)]
 
 def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="costmap.txt"):
@@ -40,14 +40,14 @@ def main():
     start_y = int(input("Enter start y coordinate: "))
     goal_x = int(input("Enter goal x coordinate: "))
     goal_y = int(input("Enter goal y coordinate: "))
+    cell_size = int(input("Enter cell size: "))
 
     filename = input("Enter filename to save to (include .txt in the filename): ")
-    cell_size = 20  # Size of each cell in pixels
 
     screen = pygame.display.set_mode((width * cell_size, height * cell_size))
     pygame.display.set_caption("Draw on Grid")
 
-    grid = create_grid(width, height, cell_size)
+    grid = create_grid(width, height)
     drawing = False
     
     running = True
