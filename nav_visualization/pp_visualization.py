@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
+
 import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Point
 import pygame
 import numpy as np
 import threading
-from ament_index_python.packages import get_package_share_directory
 import os
 
-# This should be set to the topic that the path planning node is publishing to, 
-# so that it can be visualized
-TOPIC = '/robot_position'
+from rclpy.action import ActionClient
+from rclpy.node import Node
+from ament_index_python.packages import get_package_share_directory
+
+from geometry_msgs.msg import Point
+from nav_msgs.msg import OccupancyGrid
+from infra_interfaces.action import NavigateToGoal
+from infra_interfaces.msg import Coordinate2D
+from std_msgs.msg import Header
 
 # Parameters
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 600
-GRID_HEIGHT = 20
-GRID_WIDTH = 20
 COSTMAP_FILE = 'costmap.txt'
 
 # Don't change these
@@ -27,6 +29,8 @@ class PathPlanningVisualizer(Node):
     def __init__(self):
         super().__init__('path_planning_visualizer')
         
+        self._action_client = ActionClient(self, NavigateToGoal, 'vis_action')
+        
         # Get parameters
         self.window_height = WINDOW_HEIGHT
         self.window_width = WINDOW_WIDTH
@@ -35,31 +39,69 @@ class PathPlanningVisualizer(Node):
         # Load costmap
         self.costmap = self.read_costmap(costmap_file)
         self.grid_height, self.grid_width = self.costmap.shape
-        
-        # Verify costmap dimensions
-        if self.costmap.shape != (self.grid_height, self.grid_width):
-            self.get_logger().error("Costmap dimensions don't match grid parameters!")
-            raise ValueError("Costmap dimensions mismatch")
 
         # Initialize robot position, start, and goal positions
         self.robot_position = self.start_position
-        self.position_lock = threading.Lock()
 
         # Initialize Pygame
         pygame.init()
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
         pygame.display.set_caption("ROS2 Costmap Visualization")
 
-        # Create subscriber
-        self.subscription = self.create_subscription(
-            Point,
-            TOPIC,
-            self.position_callback,
-            10)
+        self.send_goal()
 
-        # Create timer for visualization update
-        self.timer = self.create_timer(0.1, self.visualization_loop)
+    def grid_to_occupancy(self):
+        msg = OccupancyGrid()
+        msg.header = Header()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = 'map'
 
+        msg.info.resolution = float(self.window_width / self.grid_width)
+        msg.info.width = self.grid_width
+        msg.info.height = self.grid_height
+        msg.info.origin.position.x = 0.0
+        msg.info.origin.position.y = 0.0
+        msg.info.origin.position.z = 0.0
+
+        # Convert the grid into occupancy data:
+        data = []
+        for row in self.costmap:
+            for cell in row:
+                data.append(0 if cell == 255 else 100)
+        msg.data = data
+
+        return msg
+    
+    def send_goal(self):
+        msg = NavigateToGoal.Goal()
+        msg.goal = Coordinate2D()
+        msg.goal.x = self.goal_position[0]
+        msg.goal.y = self.goal_position[1]
+
+        msg.costmap = self.grid_to_occupancy()
+
+        self._action_client.wait_for_server()
+
+        self._send_goal_future = self._action_client.send_goal_async(msg, feedback_callback=self.feedback_position_callback)
+
+        self._send_goal_future.add_done_callback(self.goal_response_callback)
+    
+    def goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected :(')
+            return
+
+        self.get_logger().info('Goal accepted :)')
+
+        self._get_result_future = goal_handle.get_result_async()
+        self._get_result_future.add_done_callback(self.get_result_callback)
+
+    def get_result_callback(self, future):
+        result = future.result().result
+        self.get_logger().info('Success state: {0}'.format(result.sequence))
+        rclpy.shutdown()
+    
     def read_costmap(self, file_path):
         """Read costmap from file"""
         with open(file_path, 'r') as f:
@@ -75,17 +117,25 @@ class PathPlanningVisualizer(Node):
 
             return costmap
 
-    def position_callback(self, msg):
+    def feedback_position_callback(self, feedback):
+        
+        msg = feedback.feedback
+        self.get_logger().info('Received feedback')
+
         """Handle position updates"""
         x = int(msg.x)
         y = int(msg.y)
         x = max(0, min(self.grid_width - 1, x))
         y = max(0, min(self.grid_height - 1, y))
-        with self.position_lock:
-            self.robot_position = [x, y]
+        self.robot_position = [x, y]
+
+        self.draw_scene()
 
     def draw_scene(self):
         """Draw the visualization"""
+                
+        self.screen.fill((0, 0, 0))
+
         cell_height = self.window_height / self.grid_height
         cell_width = self.window_width / self.grid_width
 
@@ -106,22 +156,24 @@ class PathPlanningVisualizer(Node):
         pygame.draw.circle(self.screen, (0, 0, 255), goal_center, min(cell_width, cell_height) / 3)  # Blue for goal
 
         # Draw robot
-        with self.position_lock:
-            x, y = self.robot_position
+        x, y = self.robot_position
         center = (x * cell_width + cell_width / 2, y * cell_height + cell_height / 2)
         radius = min(cell_width, cell_height) / 3
         pygame.draw.circle(self.screen, (255, 0, 0), center, radius)  # Red for robot
 
-    def visualization_loop(self):
-        """Main visualization loop"""
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.destroy_node()
-                rclpy.shutdown()
-        
-        self.screen.fill((0, 0, 0))
-        self.draw_scene()
         pygame.display.flip()
+
+    # # TODO Modify this
+    # def visualization_loop(self):
+    #     """Main visualization loop"""
+    #     for event in pygame.event.get():
+    #         if event.type == pygame.QUIT:
+    #             self.destroy_node()
+    #             rclpy.shutdown()
+        
+    #     self.screen.fill((0, 0, 0))
+    #     self.draw_scene()
+    #     pygame.display.flip()
 
 
 def main(args=None):

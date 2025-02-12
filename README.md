@@ -7,7 +7,7 @@ put the file you created into the config folder
 adjust the file name in pp_visualization or lp_visualization
 
 add the following lines to setup.py
-         # Config files
+          # Config files
         (os.path.join('share', package_name, 'config'), 
          [os.path.join('config', 'YOUR FILE NAME')])
 
