@@ -48,7 +48,10 @@ class PathPlanningVisualizer(Node):
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
         pygame.display.set_caption("ROS2 Costmap Visualization")
 
-        self.send_goal()
+        # Draw the initial scene before sending costmap and starting navigation process
+        self.draw_scene()
+
+        #self.create_timer(0.1, self.send_goal)
 
     def grid_to_occupancy(self):
         msg = OccupancyGrid()
@@ -74,17 +77,25 @@ class PathPlanningVisualizer(Node):
     
     def send_goal(self):
         msg = NavigateToGoal.Goal()
+        self.get_logger().info('navigation started')
         msg.goal = Coordinate2D()
         msg.goal.x = self.goal_position[0]
         msg.goal.y = self.goal_position[1]
 
+        self.get_logger().info('message created')
+
         msg.costmap = self.grid_to_occupancy()
+        #self.get_logger().info(f'{msg.costmap}')
+        self.get_logger().info('waiting for server')
 
         self._action_client.wait_for_server()
+
+        self.get_logger().info('sending goal')  
 
         self._send_goal_future = self._action_client.send_goal_async(msg, feedback_callback=self.feedback_position_callback)
 
         self._send_goal_future.add_done_callback(self.goal_response_callback)
+        self.get_logger().info('success')
     
     def goal_response_callback(self, future):
         goal_handle = future.result()
@@ -176,11 +187,29 @@ class PathPlanningVisualizer(Node):
     #     pygame.display.flip()
 
 
+# def main(args=None):
+#     rclpy.init(args=args)
+#     visualizer = PathPlanningVisualizer()
+#     try:
+#         rclpy.spin(visualizer)
+#     except KeyboardInterrupt:
+#         pass
+#     finally:
+#         visualizer.destroy_node()
+#         rclpy.shutdown()
+#         pygame.quit()
+
 def main(args=None):
     rclpy.init(args=args)
     visualizer = PathPlanningVisualizer()
+
+    executor_thread = threading.Thread(target=rclpy.spin, args=(visualizer,), daemon=True)
+    executor_thread.start()
+
+    visualizer.send_goal()
+
     try:
-        rclpy.spin(visualizer)
+        executor_thread.join()
     except KeyboardInterrupt:
         pass
     finally:
