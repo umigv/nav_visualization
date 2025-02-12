@@ -19,7 +19,7 @@ from std_msgs.msg import Header
 # Parameters
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 600
-COSTMAP_FILE = 'costmap.txt'
+COSTMAP_FILE = 'costmap2.txt'
 
 # Don't change these
 pkg_dir = get_package_share_directory('nav_visualization')

@@ -1,5 +1,7 @@
 import pygame
 import sys
+# import tkinter as tk
+import pyautogui
 
 def create_grid(width, height):
     return [[255 for _ in range(width)] for _ in range(height)]
@@ -40,7 +42,19 @@ def main():
     start_y = int(input("Enter start y coordinate: "))
     goal_x = int(input("Enter goal x coordinate: "))
     goal_y = int(input("Enter goal y coordinate: "))
-    cell_size = int(input("Enter cell size: "))
+    # cell_size = int(input("Enter cell size: "))
+
+    # root = tk.Toplevel()
+    # screen_width = root.winfo_screenwidth()
+    # screen_height = root.winfo_screenheight()
+
+    screen_width, screen_height = pyautogui.size()
+    cell_width = screen_width / width
+    cell_height = screen_height / height
+    cell_size = int(min(cell_width, cell_height))
+    
+    if cell_size < 1:
+        assert ValueError("Window is too big for screen size")
 
     filename = input("Enter filename to save to (include .txt in the filename): ")
 
@@ -61,14 +75,26 @@ def main():
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 drawing = True
+                x, y = pygame.mouse.get_pos()
+                col, row = x // cell_size, y // cell_size
+                if grid[row][col] == 0:
+                    erasing = True         
+                else:
+                    erasing = False
+                
             elif event.type == pygame.MOUSEBUTTONUP:
                 drawing = False
             
         if drawing:
             x, y = pygame.mouse.get_pos()
+            
             col, row = x // cell_size, y // cell_size
+
             if 0 <= row < height and 0 <= col < width:
-                grid[row][col] = 0
+                if erasing:
+                    grid[row][col] = 255
+                else:
+                    grid[row][col] = 0
 
     save_costmap(start_x, start_y, goal_x, goal_y, grid, filename)
     pygame.quit()
