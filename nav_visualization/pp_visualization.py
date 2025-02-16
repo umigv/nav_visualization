@@ -124,7 +124,8 @@ class PathPlanningVisualizer(Node):
         self._get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
-        result = future.result().success
+        # result = future.result().success
+        result = future.result().result.success
         self.get_logger().info('Success state: {0}'.format(result))
         rclpy.shutdown()
     
