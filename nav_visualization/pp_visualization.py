@@ -84,7 +84,8 @@ class PathPlanningVisualizer(Node):
         data = []
         for row in self.costmap:
             for cell in row:
-                data.append(0 if cell == 255 else 100)
+                cell = int(cell)
+                data.append(cell)
         msg.data = data
 
         return msg
@@ -134,7 +135,6 @@ class PathPlanningVisualizer(Node):
             coords = f[:2]
             grid = f[2:]
 
-
             self.start_position = list(map(int, coords[0].split()))
             self.goal_position = list(map(int, coords[1].split()))
 
@@ -168,7 +168,11 @@ class PathPlanningVisualizer(Node):
         for y in range(self.grid_height):
             for x in range(self.grid_width):
                 cost = self.costmap[y, x]
-                color = (cost, cost, cost)
+                if cost == -1:
+                    color = (255, 180, 180)
+                else: 
+                    shade = 255 - int(255.0/100.0 * cost)
+                    color = (shade, shade, shade)
                 pygame.draw.rect(self.screen, color,
                                   (x * cell_width, y * cell_height, cell_width, cell_height))
 

@@ -103,7 +103,11 @@ class LocalPlanningVisualizer(Node):
         for y in range(self.grid_height):
             for x in range(self.grid_width):
                 cost = self.costmap[y, x]
-                color = (cost, cost, cost)
+                if cost == -1:
+                    color = (130, 0, 0)
+                else: 
+                    shade = 255 - int(255.0/100.0 * cost)
+                    color = (shade, shade, shade)
                 pygame.draw.rect(self.screen, color,
                                (x * self.cell_width, y * self.cell_height, self.cell_width, self.cell_height))
         

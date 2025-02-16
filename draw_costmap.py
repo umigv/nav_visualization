@@ -4,7 +4,7 @@ import sys
 import pyautogui
 
 def create_grid(width, height):
-    return [[255 for _ in range(width)] for _ in range(height)]
+    return [[0 for _ in range(width)] for _ in range(height)]
 
 def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="config/costmap.txt"):
 
@@ -19,7 +19,7 @@ def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="config/costma
 def draw_grid(screen, start_x, start_y, goal_x, goal_y, grid, cell_size):
     for row_idx, row in enumerate(grid):
         for col_idx, cell in enumerate(row):
-            color = (255, 255, 255) if cell == 255 else (0, 0, 0)
+            color = (255, 255, 255) if cell == 0 else (0, 0, 0)
             pygame.draw.rect(screen, color, (col_idx * cell_size, row_idx * cell_size, cell_size, cell_size))
             pygame.draw.rect(screen, (200, 200, 200), (col_idx * cell_size, row_idx * cell_size, cell_size, cell_size), 1)
     
@@ -77,7 +77,7 @@ def main():
                 drawing = True
                 x, y = pygame.mouse.get_pos()
                 col, row = x // cell_size, y // cell_size
-                if grid[row][col] == 0:
+                if grid[row][col] == 100:
                     erasing = True         
                 else:
                     erasing = False
@@ -92,13 +92,13 @@ def main():
 
             if 0 <= row < height and 0 <= col < width:
                 if erasing:
-                    grid[row][col] = 255
-                else:
                     grid[row][col] = 0
+                else:
+                    grid[row][col] = 100
 
     # Append config directory to filename
     filename  = "config/" + filename
-    
+
     save_costmap(start_x, start_y, goal_x, goal_y, grid, filename)
     pygame.quit()
     sys.exit()
