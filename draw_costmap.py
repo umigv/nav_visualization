@@ -6,7 +6,7 @@ import pyautogui
 def create_grid(width, height):
     return [[255 for _ in range(width)] for _ in range(height)]
 
-def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="costmap.txt"):
+def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="config/costmap.txt"):
 
     with open(filename, 'w') as f:
         f.write(" ".join(map(str,[start_x, start_y])) + "\n")
@@ -96,6 +96,9 @@ def main():
                 else:
                     grid[row][col] = 0
 
+    # Append config directory to filename
+    filename  = "config/" + filename
+    
     save_costmap(start_x, start_y, goal_x, goal_y, grid, filename)
     pygame.quit()
     sys.exit()

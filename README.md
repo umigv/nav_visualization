@@ -12,7 +12,6 @@ draw your map
 close the pygame window
 
 ### enabling your new map
-put the file you created into the config folder
 adjust the file name in pp_visualization or lp_visualization
 
 add the following lines to setup.py
@@ -21,17 +20,14 @@ add the following lines to setup.py
          [os.path.join('config', 'YOUR FILE NAME')])
 
 
-Open 3 terminals
+Open 2 terminals
 
 terminal 1:
 colcon build --packages-select nav_visualization nav_infrastructure
 
-terminal 
-source install/setup.zsh 
+terminal 2:
+source install/setup.zsh
+or
 source install/setup.bash
 
-run local visualizer:
-ros2 run nav_visualization path_planning_visualizer
-
-run path planning visualizer:
-ros2 run nav_visualization local_planning_visualizer
+ros2 launch nav_visualization server-demo-pp.py

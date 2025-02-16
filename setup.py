@@ -15,13 +15,17 @@ setup(
         # Package.xml
         (os.path.join('share', package_name), ['package.xml']),
         
-        # Launch files
+        # Dummy twist publisher demo for local planning
         (os.path.join('share', package_name, 'launch'), 
-         [os.path.join('launch', 'demo.launch.py')]),
+         [os.path.join('launch', 'dummy-demo-lp.py')]),
 
-        # Launch 2 files
+        # Dummy position publisher demo for path planning
         (os.path.join('share', package_name, 'launch'), 
-         [os.path.join('launch', 'demo.launch2.py')]),
+         [os.path.join('launch', 'dummy-demo-pp.py')]),
+        
+        # Action server demo for path planning 
+        (os.path.join('share', package_name, 'launch'), 
+         [os.path.join('launch', 'server-demo-pp.py')]),
         
         # Config files
         (os.path.join('share', package_name, 'config'), 

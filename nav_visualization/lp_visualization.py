@@ -8,7 +8,7 @@ import threading
 import math
 from ament_index_python.packages import get_package_share_directory
 import os
-
+import pyautogui
 
 
 # This should be set to the topic that the path planning node is publishing to, 
@@ -16,11 +16,9 @@ import os
 TOPIC = '/robot_twist'
 
 #parameters
-WINDOW_HEIGHT = 600
-WINDOW_WIDTH = 600
-GRID_HEIGHT = 20
-GRID_WIDTH = 20
-COSTMAP_FILE = 'costmap.txt'
+WINDOW_HEIGHT = None
+WINDOW_WIDTH = None
+COSTMAP_FILE = 'costmap3.txt'
 
 #dont change these
 pkg_dir = get_package_share_directory('nav_visualization')
@@ -34,22 +32,28 @@ class LocalPlanningVisualizer(Node):
         
         
         # Get parameters
-        self.window_height = WINDOW_HEIGHT
-        self.window_width = WINDOW_WIDTH
-        self.grid_height = GRID_HEIGHT
-        self.grid_width = GRID_WIDTH
         costmap_file = COSTMAP
-
-        self.cell_height = self.window_height / self.grid_height
-        self.cell_width = self.window_width / self.grid_width
         
         # Load costmap
         self.costmap = self.read_costmap(costmap_file)
-        
-        # Verify costmap dimensions
-        if self.costmap.shape != (self.grid_height, self.grid_width):
-            self.get_logger().error("Costmap dimensions don't match grid parameters!")
-            raise ValueError("Costmap dimensions mismatch")
+        self.grid_height, self.grid_width = self.costmap.shape
+
+        if (not WINDOW_HEIGHT) or (not WINDOW_WIDTH):
+            screen_width, screen_height = pyautogui.size()
+            cell_width = screen_width / self.grid_width
+            cell_height = screen_height / self.grid_height
+            cell_size = int(min(cell_width, cell_height))
+
+            self.window_height = self.grid_height * cell_size
+            self.window_width = self.grid_width * cell_size
+        else: 
+            self.window_height = WINDOW_HEIGHT
+            self.window_width = WINDOW_WIDTH
+            cell_width = WINDOW_WIDTH / self.grid_width
+            cell_height = WINDOW_HEIGHT / self.grid_height
+
+        self.cell_height = self.window_height / self.grid_height
+        self.cell_width = self.window_width / self.grid_width
 
         # Initialize robot position
         self.robot_pose = [self.grid_width / 2, self.grid_height / 2, 0]
@@ -74,7 +78,17 @@ class LocalPlanningVisualizer(Node):
     def read_costmap(self, file_path):
         """Read costmap from file"""
         with open(file_path, 'r') as f:
-            return np.array([[int(num) for num in line.split()] for line in f])
+            f = f.readlines()
+            coords = f[:2]
+            grid = f[2:]
+
+            self.start_position = list(map(int, coords[0].split()))
+            self.goal_position = list(map(int, coords[1].split()))
+
+            costmap = np.array([[int(num) for num in line.split()] for line in grid])
+
+            return costmap
+
 
     def twist_callback(self, msg):
         """Handle position updates"""
@@ -93,6 +107,13 @@ class LocalPlanningVisualizer(Node):
                 pygame.draw.rect(self.screen, color,
                                (x * self.cell_width, y * self.cell_height, self.cell_width, self.cell_height))
         
+        start_center = (self.start_position[0] * self.cell_width + self.cell_width / 2, 
+                        self.start_position[1] * self.cell_height + self.cell_height / 2)
+        goal_center = (self.goal_position[0] * self.cell_width + self.cell_width / 2, 
+                       self.goal_position[1] * self.cell_height + self.cell_height / 2)
+        pygame.draw.circle(self.screen, (0, 255, 0), start_center, min(self.cell_width, self.cell_height) / 3)  # Green for start
+        pygame.draw.circle(self.screen, (0, 0, 255), goal_center, min(self.cell_width, self.cell_height) / 3)  # Blue for goal
+
         # Draw robot
         with self.twist_lock:
             lin_vel_x = self.twist.linear.x

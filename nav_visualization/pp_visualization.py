@@ -41,7 +41,6 @@ class PathPlanningVisualizer(Node):
         self.grid_height, self.grid_width = self.costmap.shape
 
         if (not WINDOW_HEIGHT) or (not WINDOW_WIDTH):
-            print("Auto sizing")
             screen_width, screen_height = pyautogui.size()
             cell_width = screen_width / self.grid_width
             cell_height = screen_height / self.grid_height
@@ -100,7 +99,7 @@ class PathPlanningVisualizer(Node):
         self.get_logger().info('message created')
 
         msg.costmap = self.grid_to_occupancy()
-        self.get_logger().info(f'{msg}')
+        #self.get_logger().info(f'{msg}')
         self.get_logger().info('waiting for server')
 
         self._action_client.wait_for_server()
