@@ -9,9 +9,6 @@ import pyautogui
 
 from rclpy.action import ActionClient
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory
-
-from geometry_msgs.msg import Point
 from nav_msgs.msg import OccupancyGrid
 from infra_interfaces.action import NavigateToGoal
 from infra_interfaces.msg import Coordinate2D
@@ -30,11 +27,20 @@ class PathPlanningVisualizer(Node):
         
         self._action_client = ActionClient(self, NavigateToGoal, 'navigate_to_goal')
         
-        # Get parameters
-        costmap_file = self.get_parameter('costmap_file').get_parameter_value().string_value
+        self.send_goal()
+
+    def variable_initiation(self, costmap_file):
+        # Remove the last 5 folders (launch, nav_visualization, share, nav_visualization, install)
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        num_folders_to_remove = 6
+        for _ in range(num_folders_to_remove):
+            script_directory = os.path.dirname(script_directory)
+        
+        costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
+        print(costmap_path)
 
         # Load costmap
-        self.costmap = self.read_costmap(costmap_file)
+        self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
         if (not WINDOW_HEIGHT) or (not WINDOW_WIDTH):
@@ -52,17 +58,6 @@ class PathPlanningVisualizer(Node):
             cell_height = WINDOW_HEIGHT / self.grid_height
         # Initialize robot position, start, and goal positions
         self.robot_position = self.start_position
-
-        # Initialize Pygame
-        pygame.init()
-        self.screen = pygame.display.set_mode((self.window_width, self.window_height))
-        pygame.display.set_caption("ROS2 Costmap Visualization")
-
-        # Draw the initial scene before sending costmap and starting navigation process
-        self.draw_scene()
-
-        #self.create_timer(0.1, self.send_goal)
-        self.send_goal()
 
     def grid_to_occupancy(self):
         msg = OccupancyGrid()
@@ -88,6 +83,19 @@ class PathPlanningVisualizer(Node):
         return msg
     
     def send_goal(self):
+
+        # Get parameters
+        costmap_file = self.get_parameter('costmap_file').get_parameter_value().string_value
+        self.variable_initiation(costmap_file)
+
+        # Initialize Pygame
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.window_width, self.window_height))
+        pygame.display.set_caption("ROS2 Costmap Visualization")
+
+        # Draw the initial scene before sending costmap and starting navigation process
+        self.draw_scene()
+        
         msg = NavigateToGoal.Goal()
         self.get_logger().info('navigation started')
         msg.goal = Coordinate2D()
@@ -97,7 +105,6 @@ class PathPlanningVisualizer(Node):
         self.get_logger().info('message created')
 
         msg.costmap = self.grid_to_occupancy()
-        #self.get_logger().info(f'{msg}')
         self.get_logger().info('waiting for server')
 
         self._action_client.wait_for_server()

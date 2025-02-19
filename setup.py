@@ -26,17 +26,6 @@ setup(
         # Action server demo for path planning 
         (os.path.join('share', package_name, 'launch'), 
          [os.path.join('launch', 'server-demo-pp.py')]),
-        
-        # Config files
-        (os.path.join('share', package_name, 'config'), 
-         [os.path.join('config', 'costmap.txt')]),
-
-         # Config files
-        (os.path.join('share', package_name, 'config'), 
-         [os.path.join('config', 'costmap2.txt')]),
-         # Config files
-        (os.path.join('share', package_name, 'config'), 
-         [os.path.join('config', 'costmap3.txt')]),
 
     ],
     install_requires=['setuptools'],

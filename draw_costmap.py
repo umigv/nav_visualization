@@ -1,20 +1,24 @@
 import pygame
 import sys
-# import tkinter as tk
 import pyautogui
+import os
 
 def create_grid(width, height):
     return [[0 for _ in range(width)] for _ in range(height)]
 
-def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="config/costmap.txt"):
+def save_costmap(start_x, start_y, goal_x, goal_y, grid, filename="costmap.txt"):
 
-    with open(filename, 'w') as f:
+    file_directory = os.path.dirname(os.path.abspath(__file__))
+    file_directory = os.path.dirname(file_directory)
+    save_path = os.path.join(file_directory, "costmaps", filename)
+
+    with open(save_path, 'w') as f:
         f.write(" ".join(map(str,[start_x, start_y])) + "\n")
         f.write(" ".join(map(str,[goal_x, goal_y])) + "\n")
 
         for row in grid:
             f.write(" ".join(map(str, row)) + "\n")
-    print(f"Costmap saved to {filename}")
+    print(f"Costmap saved to {save_path}")
 
 def draw_grid(screen, start_x, start_y, goal_x, goal_y, grid, cell_size):
     for row_idx, row in enumerate(grid):
@@ -42,11 +46,6 @@ def main():
     start_y = int(input("Enter start y coordinate: "))
     goal_x = int(input("Enter goal x coordinate: "))
     goal_y = int(input("Enter goal y coordinate: "))
-    # cell_size = int(input("Enter cell size: "))
-
-    # root = tk.Toplevel()
-    # screen_width = root.winfo_screenwidth()
-    # screen_height = root.winfo_screenheight()
 
     screen_width, screen_height = pyautogui.size()
     cell_width = screen_width / width
