@@ -1,4 +1,8 @@
 # nav_visualization
+# TODO - modify other launch files for correct parameter and command line reading in, and add window height and width as potential command line arguments
+# TODO - add path tracing to both pp-visualization and ideally lp_visualization as well 
+# TODO - complete documentation (add comments to files and properly complete readme)
+# TODO - update requirements.txt
 
 ## draw_costmap.py
 MAKE A COSTMAP:
