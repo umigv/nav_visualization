@@ -10,13 +10,20 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     # Get the package share directory
     #     
+
+    pkg_dir = get_package_share_directory('nav_visualization')
+    costmap_path = os.path.join(pkg_dir, 'costmap4.txt')
+
     return LaunchDescription([
         # Visualization Node
         Node(
             package='nav_visualization',
             executable='path_planning_visualizer',
             name='path_planning_visualizer',
-            output='screen'
+            output='screen',
+            parameters=[{
+              'costmap_file': costmap_path,
+            }]
         ),
         Node(
             package='planner_server',

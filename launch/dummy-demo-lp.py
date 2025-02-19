@@ -8,7 +8,7 @@ def generate_launch_description():
     pkg_dir = get_package_share_directory('nav_visualization')
     
     # Path to costmap file
-    costmap_path = os.path.join(pkg_dir, 'config', 'costmap.txt')
+    costmap_path = os.path.join(pkg_dir, 'costmap.txt')
     
     return LaunchDescription([
         # Visualization Node

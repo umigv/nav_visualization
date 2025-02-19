@@ -21,20 +21,17 @@ from std_msgs.msg import Header
 # Set these to none if for auto sizing
 WINDOW_HEIGHT = None
 WINDOW_WIDTH = None
-COSTMAP_FILE = 'costmap3.txt'
-
-# Don't change these
-pkg_dir = get_package_share_directory('nav_visualization')
-COSTMAP = os.path.join(pkg_dir, 'config', COSTMAP_FILE)
 
 class PathPlanningVisualizer(Node):
     def __init__(self):
         super().__init__('path_planning_visualizer')
+
+        self.declare_parameter('costmap_file', 'costmap.txt')
         
         self._action_client = ActionClient(self, NavigateToGoal, 'navigate_to_goal')
         
         # Get parameters
-        costmap_file = COSTMAP
+        costmap_file = self.get_parameter('costmap_file').get_parameter_value().string_value
 
         # Load costmap
         self.costmap = self.read_costmap(costmap_file)

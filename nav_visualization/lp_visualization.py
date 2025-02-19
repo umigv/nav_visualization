@@ -30,9 +30,11 @@ class LocalPlanningVisualizer(Node):
     def __init__(self):
         super().__init__('local_planning_visualizer')
         
-        
+        self.declare_parameter('costmap_file', 'costmap.txt')
+
         # Get parameters
-        costmap_file = COSTMAP
+        costmap_file = self.get_parameter('costmap_file').get_parameter_value().string_value
+
         
         # Load costmap
         self.costmap = self.read_costmap(costmap_file)
