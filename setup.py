@@ -49,6 +49,14 @@ setup(
         # Launch file for action server demo for path planning
         (os.path.join('share', package_name, 'launch'), 
          [os.path.join('launch', 'server-demo-pp.py')]),
+        
+        # Launch file for action server demo for path planning
+        (os.path.join('share', package_name, 'launch'), 
+         [os.path.join('launch', 'lp_visualization.launch.py')]),
+        
+        # Launch file for action server demo for path planning
+        (os.path.join('share', package_name, 'launch'), 
+         [os.path.join('launch', 'pp_visualization.launch.py')]),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Launch File for Path Planning Visualizer and Dummy Position Publisher Nodes
+Launch File for Path Planning Visualizer Node
 
 This launch file starts two ROS2 nodes from the 'nav_visualization' package:
 1. **path_planning_visualizer**: Visualizes path planning using a provided costmap.
