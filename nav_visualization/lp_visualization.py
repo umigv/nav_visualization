@@ -36,6 +36,8 @@ from infra_interfaces.action import NavigateToGoal
 from infra_interfaces.msg import CellCoordinateMsg
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Header
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseWithCovariance
 from rclpy.action import ActionClient
 import pygame
 import numpy as np
@@ -107,6 +109,12 @@ class LocalPlanningVisualizer(Node):
             Twist, 
             topic,
             self.twist_callback,
+            10
+        )
+
+        self.publisher = self.create_publisher(
+            Twist,
+            '/odom',
             10
         )
 
@@ -253,6 +261,16 @@ class LocalPlanningVisualizer(Node):
         theta += LocalPlanningVisualizer.DELTA_TIME * ang_vel
         self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]
 
+        # Publish the robot odometry 
+        msg = Odometry()
+        cov_pose = PoseWithCovariance()
+        cov_pose.pose = self.robot_pose
+        msg.pose = cov_pose
+        msg.twist = self.twist
+
+        self.publisher.publish(msg)
+        self.get_logger().info(f'Publishing pose to /odom')
+        
         # Append the current position to the robot's path
         self.robot_path.append([x, y])
 
