@@ -232,12 +232,20 @@ class PathPlanningVisualizer(Node):
         # Draw costmap
         for y in range(self.grid_height):
             for x in range(self.grid_width):
-                shade = 255 - int(255.0 / 100.0 * self.costmap[y, x])
-                pygame.draw.rect(self.screen, (shade, shade, shade), (x * cell_width, y * cell_height, cell_width, cell_height))
+                if self.costmap[y, x] >= 0:
+                    shade = 255 - int(255.0 / 100.0 * self.costmap[y, x])
+                    color = (shade, shade, shade)
+                else:
+                    color = (255, 204, 204)
 
+                pygame.draw.rect(self.screen, color, (x * cell_width, y * cell_height, cell_width, cell_height))
+        
         # Draw robot and path
         for point in self.robot_path:
-            pygame.draw.circle(self.screen, (255, 100, 100), (point[0] * cell_width, point[1] * cell_height), 3)
+            # Draw path as light green
+            pygame.draw.circle(self.screen, (204, 255, 204), (point[0] * cell_width, point[1] * cell_height), min(cell_height, cell_width))
+        # Draw robot as red
+        pygame.draw.circle(self.screen, (255, 0, 0), (self.robot_position[0] * cell_width, self.robot_position[1] * cell_height), )
 
         pygame.display.flip()
 
