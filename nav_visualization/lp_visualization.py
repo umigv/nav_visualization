@@ -69,7 +69,9 @@ class LocalPlanningVisualizer(Node):
         for _ in range(6):  # Move up 6 directories
             script_directory = os.path.dirname(script_directory)
         
-        costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
+        
+        # costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
+        costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
         self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
@@ -101,7 +103,7 @@ class LocalPlanningVisualizer(Node):
 
         # Create an action client for path planning
         self._action_client = ActionClient(self, NavigateToGoal, 'navigate_to_goal')
-
+        print(f"twist topic: {topic}")
         # Subscribe to the Twist topic
         self.subscription = self.create_subscription(
             Twist, 
