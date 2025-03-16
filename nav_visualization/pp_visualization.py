@@ -151,11 +151,13 @@ class PathPlanningVisualizer(Node):
 
         # Create goal message
         msg = NavigateToGoal.Goal()
+        msg.start = Coordinate2D(x=self.start_position[0], y=self.start_position[1])
         msg.goal = Coordinate2D(x=self.goal_position[0], y=self.goal_position[1])
         msg.costmap = self.grid_to_occupancy()
 
         # Send goal to action server
-        self._action_client.wait_for_server()
+        if not self._action_client.wait_for_server(timeout_sec = 5.0):
+            raise Exception("Action server timed out - over 5 seconds of inactivity")
         self._send_goal_future = self._action_client.send_goal_async(msg, feedback_callback=self.feedback_position_callback)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
 
@@ -228,6 +230,7 @@ class PathPlanningVisualizer(Node):
 
         cell_height = self.window_height / self.grid_height
         cell_width = self.window_width / self.grid_width
+        radius = cell_height // 2
 
         # Draw costmap
         for y in range(self.grid_height):
@@ -236,16 +239,16 @@ class PathPlanningVisualizer(Node):
                     shade = 255 - int(255.0 / 100.0 * self.costmap[y, x])
                     color = (shade, shade, shade)
                 else:
-                    color = (255, 204, 204)
+                    color = (127, 0, 255)
 
                 pygame.draw.rect(self.screen, color, (x * cell_width, y * cell_height, cell_width, cell_height))
         
         # Draw robot and path
         for point in self.robot_path:
             # Draw path as light green
-            pygame.draw.circle(self.screen, (204, 255, 204), (point[0] * cell_width, point[1] * cell_height), min(cell_height, cell_width))
+            pygame.draw.circle(self.screen, (204, 255, 204), (point[0] * cell_width + radius, point[1] * cell_height + radius), radius)
         # Draw robot as red
-        pygame.draw.circle(self.screen, (255, 0, 0), (self.robot_position[0] * cell_width, self.robot_position[1] * cell_height), )
+        pygame.draw.circle(self.screen, (255, 0, 0), (self.robot_position[0] * cell_width + radius, self.robot_position[1] * cell_height + radius), radius)
 
         pygame.display.flip()
 
