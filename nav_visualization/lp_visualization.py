@@ -33,7 +33,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from infra_interfaces.action import NavigateToGoal
-from infra_interfaces.msg import Coordinate2D
+from infra_interfaces.msg import CellCoordinateMsg
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Header
 from rclpy.action import ActionClient
@@ -123,8 +123,8 @@ class LocalPlanningVisualizer(Node):
 
         # Create goal message
         msg = NavigateToGoal.Goal()
-        msg.start = Coordinate2D(x=self.start_position[0], y=self.start_position[1])
-        msg.goal = Coordinate2D(x=self.goal_position[0], y=self.goal_position[1])
+        msg.start = CellCoordinateMsg(x=self.start_position[0], y=self.start_position[1])
+        msg.goal = CellCoordinateMsg(x=self.goal_position[0], y=self.goal_position[1])
         msg.costmap = self.grid_to_occupancy()
 
         # Send goal to action server

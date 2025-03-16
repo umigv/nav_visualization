@@ -50,11 +50,11 @@ setup(
         (os.path.join('share', package_name, 'launch'), 
          [os.path.join('launch', 'server-demo-pp.py')]),
         
-        # Launch file for action server demo for path planning
+        # Launch file for local planning visualization node
         (os.path.join('share', package_name, 'launch'), 
          [os.path.join('launch', 'lp_visualization.launch.py')]),
         
-        # Launch file for action server demo for path planning
+        # Launch file for path planning visualization node
         (os.path.join('share', package_name, 'launch'), 
          [os.path.join('launch', 'pp_visualization.launch.py')]),
     ],
