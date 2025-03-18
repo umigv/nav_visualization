@@ -47,7 +47,7 @@ def generate_launch_description():
 
     topic_arg = DeclareLaunchArgument(
         'topic',
-        default_value='/robot_twist',
+        default_value='/cmd_vel',
         description='ROS2 topic to publish Twist messages.'
     )
 
