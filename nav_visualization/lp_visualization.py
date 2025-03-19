@@ -37,7 +37,7 @@ from infra_interfaces.msg import CellCoordinateMsg
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import PoseWithCovariance, Pose, Point, TwistWithCovariance
 from rclpy.action import ActionClient
 import pygame
 import numpy as np
@@ -115,7 +115,7 @@ class LocalPlanningVisualizer(Node):
         )
 
         self.publisher = self.create_publisher(
-            Twist,
+            Odometry,
             '/odom',
             10
         )
@@ -136,7 +136,7 @@ class LocalPlanningVisualizer(Node):
         msg.start = CellCoordinateMsg(x=self.start_position[0], y=self.start_position[1])
         msg.goal = CellCoordinateMsg(x=self.goal_position[0], y=self.goal_position[1])
         msg.costmap = self.grid_to_occupancy()
-        msg.info.resolution = 1.0
+        msg.costmap.info.resolution = 1.0
 
         # Send goal to action server
         if not self._action_client.wait_for_server(timeout_sec = 5.0):
@@ -267,9 +267,13 @@ class LocalPlanningVisualizer(Node):
         # Publish the robot odometry 
         msg = Odometry()
         cov_pose = PoseWithCovariance()
-        cov_pose.pose = self.robot_pose
+        pose = Pose()
+        pose.position = Point(x=self.robot_pose[0], y=self.robot_pose[1], z=0.0)
+        cov_pose.pose = pose
         msg.pose = cov_pose
-        msg.twist = self.twist
+        cov_twist = TwistWithCovariance()
+        cov_twist.twist = self.twist
+        msg.twist = cov_twist
 
         self.publisher.publish(msg)
         self.get_logger().info(f'Publishing pose to /odom')
