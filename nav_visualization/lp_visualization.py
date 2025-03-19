@@ -136,6 +136,7 @@ class LocalPlanningVisualizer(Node):
         msg.start = CellCoordinateMsg(x=self.start_position[0], y=self.start_position[1])
         msg.goal = CellCoordinateMsg(x=self.goal_position[0], y=self.goal_position[1])
         msg.costmap = self.grid_to_occupancy()
+        msg.info.resolution = 1.0
 
         # Send goal to action server
         if not self._action_client.wait_for_server(timeout_sec = 5.0):
