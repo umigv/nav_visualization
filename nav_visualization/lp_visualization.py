@@ -279,7 +279,7 @@ class LocalPlanningVisualizer(Node):
         # Draw the robot's trajectory
         radius = self.cell_height // 2
         if len(self.robot_path) > 1:
-            path_pixels = [(pt[0] * self.cell_width + radius, pt[1] * self.cell_height + radius) for pt in self.robot_path]
+            path_pixels = [(pt[0] * self.cell_width + radius, (self.grid_height - pt[1]) * self.cell_height + radius) for pt in self.robot_path]
             pygame.draw.lines(self.screen, (204, 255, 204), False, path_pixels, 2)
 
         # Draw the robot's current position
@@ -296,7 +296,7 @@ class LocalPlanningVisualizer(Node):
             color (tuple): RGB color.
         """
         center = (position[0] * self.cell_width + self.cell_width / 2, 
-                  position[1] * self.cell_height + self.cell_height / 2)
+                 (self.grid_height - position[1]) * self.cell_height + self.cell_height / 2)
         pygame.draw.circle(self.screen, color, center, min(self.cell_width, self.cell_height) / 3)
 
     def draw_robot_direction(self, color=(0, 255, 0)):
@@ -307,20 +307,20 @@ class LocalPlanningVisualizer(Node):
       # Calculate arrow tip (end point)
       radius = self.cell_height // 2
       x = self.robot_pose[0] * self.cell_width + radius
-      y = self.robot_pose[1] * self.cell_height + radius
+      y = (self.grid_height - self.robot_pose[1]) * self.cell_height + radius
       theta = self.robot_pose[2]
 
       tip_x = x + arrow_length * math.cos(theta)
-      tip_y = y + arrow_length * math.sin(theta)
+      tip_y = y - arrow_length * math.sin(theta)
       wing_size = min(self.cell_width, self.cell_height) // 3
       arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
 
 
       # Calculate arrowhead points
       left_wing = (tip_x - wing_size * math.cos(theta - math.pi / 6), 
-                  tip_y - wing_size * math.sin(theta - math.pi / 6))
+                  tip_y + wing_size * math.sin(theta - math.pi / 6))
       right_wing = (tip_x - wing_size * math.cos(theta + math.pi / 6), 
-                    tip_y - wing_size * math.sin(theta + math.pi / 6))
+                    tip_y + wing_size * math.sin(theta + math.pi / 6))
 
       # Draw main arrow line
       pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), arrow_line_width)
@@ -336,7 +336,7 @@ class LocalPlanningVisualizer(Node):
       # Calculate arrow center
       radius = self.cell_height // 2
       x = self.robot_pose[0] * self.cell_width + radius
-      y = self.robot_pose[1] * self.cell_height + radius
+      y = (self.grid_height - self.robot_pose[1]) * self.cell_height + radius
 
       if self.twist.linear.x == 0:
           theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
@@ -351,16 +351,16 @@ class LocalPlanningVisualizer(Node):
 
       # Calculate arrow tip (end point)
       tip_x = x + arrow_length * math.cos(theta) 
-      tip_y = y + arrow_length * math.sin(theta) 
+      tip_y = y - arrow_length * math.sin(theta) 
       wing_size = min(self.cell_width, self.cell_height) // 3
       arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
 
 
       # Calculate arrowhead points
       left_wing = (tip_x - wing_size * math.cos(theta - math.pi / 6), 
-                  tip_y - wing_size * math.sin(theta - math.pi / 6))
+                  tip_y + wing_size * math.sin(theta - math.pi / 6))
       right_wing = (tip_x - wing_size * math.cos(theta + math.pi / 6), 
-                    tip_y - wing_size * math.sin(theta + math.pi / 6))
+                    tip_y + wing_size * math.sin(theta + math.pi / 6))
 
       # Draw main arrow line
       pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), arrow_line_width)
