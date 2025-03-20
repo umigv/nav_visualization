@@ -37,7 +37,7 @@ from infra_interfaces.msg import CellCoordinateMsg
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Header
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import PoseWithCovariance, Pose, Point, TwistWithCovariance
+from geometry_msgs.msg import PoseWithCovariance, Pose, Point, TwistWithCovariance, Quaternion
 from rclpy.action import ActionClient
 import pygame
 import numpy as np
@@ -46,6 +46,24 @@ import math
 import os
 import pyautogui
 from ament_index_python.packages import get_package_share_directory
+
+def euler_to_quaternion(roll, pitch, yaw):
+    """
+    Convert Euler angles to quaternion
+    """
+    cy = math.cos(yaw * 0.5)
+    sy = math.sin(yaw * 0.5)
+    cp = math.cos(pitch * 0.5)
+    sp = math.sin(pitch * 0.5)
+    cr = math.cos(roll * 0.5)
+    sr = math.sin(roll * 0.5)
+
+    qw = cr * cp * cy + sr * sp * sy
+    qx = sr * cp * cy - cr * sp * sy
+    qy = cr * sp * cy + sr * cp * sy
+    qz = cr * cp * sy - sr * sp * cy
+
+    return qx, qy, qz, qw
 
 class LocalPlanningVisualizer(Node):
     """
@@ -254,29 +272,38 @@ class LocalPlanningVisualizer(Node):
         self.draw_circle(self.start_position, (0, 255, 0))  # Green for start
         self.draw_circle(self.goal_position, (0, 0, 255))    # Blue for goal
 
-        # Update robot pose based on velocity
+        
         with self.twist_lock:
             lin_vel_x, lin_vel_y, ang_vel = self.twist.linear.x, self.twist.linear.y, self.twist.angular.z
 
+        speed_factor = 0.25
+        lin_vel_x *= speed_factor
+        lin_vel_y *= speed_factor
+        ang_vel *= speed_factor
+
         x, y, theta = self.robot_pose
-        x += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x
-        y += LocalPlanningVisualizer.DELTA_TIME * lin_vel_y
-        theta += LocalPlanningVisualizer.DELTA_TIME * ang_vel
-        self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]
 
         # Publish the robot odometry 
         msg = Odometry()
         cov_pose = PoseWithCovariance()
         pose = Pose()
-        pose.position = Point(x=self.robot_pose[0], y=self.robot_pose[1], z=0.0)
+        pose.position = Point(x=float(x), y=float(y), z=0.0)
+        qx, qy, qz, qw = euler_to_quaternion(0.0, 0.0, theta)  # Assuming theta is yaw
+        pose.orientation = Quaternion(x=qx, y=qy, z=qz, w=qw)
         cov_pose.pose = pose
         msg.pose = cov_pose
         cov_twist = TwistWithCovariance()
         cov_twist.twist = self.twist
         msg.twist = cov_twist
 
+        # Update robot pose based on velocity
+        x += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.cos(theta) - lin_vel_y * math.sin(theta)
+        y += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.sin(theta) + lin_vel_y * math.cos(theta)
+        theta += LocalPlanningVisualizer.DELTA_TIME * ang_vel
+        self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]
+
         self.publisher.publish(msg)
-        self.get_logger().info(f'Publishing pose to /odom')
+        self.get_logger().info(f'Publishing pose {msg.pose.pose.position} to /odom')
         
         # Append the current position to the robot's path
         self.robot_path.append([x, y])
