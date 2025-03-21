@@ -99,6 +99,9 @@ class LocalPlanningVisualizer(Node):
         self.window_height = self.get_parameter('window_height').get_parameter_value().integer_value
         self.window_width = self.get_parameter('window_width').get_parameter_value().integer_value
 
+        self.get_logger().info(f"window height: {self.window_height}, window width: {self.window_width}")
+        self.get_logger().info(f"start position: {self.start_position}, goal position: {self.goal_position}")
+
         # Determine cell size based on provided window dimensions or screen size
         screen_width, screen_height = pyautogui.size()
         cell_width = (self.window_width or screen_width) / self.grid_width
@@ -178,6 +181,7 @@ class LocalPlanningVisualizer(Node):
             lines = f.readlines()
             self.start_position = list(map(int, lines[0].split()))
             self.goal_position = list(map(int, lines[1].split()))
+
             costmap = np.array([[int(num) for num in line.split()] for line in lines[2:]])
         return costmap
     
@@ -269,8 +273,8 @@ class LocalPlanningVisualizer(Node):
                                  (x * self.cell_width, y * self.cell_height, self.cell_width, self.cell_height))
 
         # Draw start and goal points
-        self.draw_circle(self.start_position, (0, 255, 0))  # Green for start
-        self.draw_circle(self.goal_position, (0, 0, 255))    # Blue for goal
+        self.draw_circle(self.pose_to_pixel(self.start_position), (0, 255, 0))  # Green for start
+        self.draw_circle(self.pose_to_pixel(self.goal_position), (0, 0, 255))    # Blue for goal
 
         
         with self.twist_lock:
@@ -303,7 +307,7 @@ class LocalPlanningVisualizer(Node):
         self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]
 
         self.publisher.publish(msg)
-        self.get_logger().info(f'Publishing pose {msg.pose.pose.position} to /odom')
+        # self.get_logger().info(f'Publishing pose {msg.pose.pose.position} to /odom')
         
         # Append the current position to the robot's path
         self.robot_path.append([x, y])
@@ -315,90 +319,100 @@ class LocalPlanningVisualizer(Node):
             pygame.draw.lines(self.screen, (204, 255, 204), False, path_pixels, 2)
 
         # Draw the robot's current position
-        self.draw_circle(self.robot_pose[:2], (255, 0, 0))
+        self.draw_circle(self.robot_pose_to_pixel(), (255, 0, 0))
         self.draw_robot_direction()
         self.draw_robot_velo()
 
+    def pose_to_pixel(self, pose):
+        """
+        Converts a pose to pixel coordinates. For example, for a pose of [0,0],
+        returns the pixel coordinates of the center of the costmap cell in the
+        bottom left corner.
+
+        Args:
+            pose (list): [x, y] coordinates.
+
+        Returns:
+            tuple: (x, y) pixel coordinates.
+        """
+        return (pose[0] * self.cell_width + self.cell_width / 2, 
+            (self.grid_height - 1 - pose[1]) * self.cell_height + self.cell_height / 2)
+    
+    def robot_pose_to_pixel(self):
+        """
+        Converts the robot's pose to pixel coordinates.
+
+        Returns:
+            tuple: (x, y) pixel coordinates.
+        """
+        return self.pose_to_pixel(self.robot_pose[:2])
+
     def draw_circle(self, position, color):
         """
-        Draws a circle at a given position.
+        Draws a circle at a given position on the screen.
 
         Args:
             position (list): [x, y] coordinates.
             color (tuple): RGB color.
         """
-        center = (position[0] * self.cell_width + self.cell_width / 2, 
-                 (self.grid_height - position[1]) * self.cell_height + self.cell_height / 2)
-        pygame.draw.circle(self.screen, color, center, min(self.cell_width, self.cell_height) / 3)
+        pygame.draw.circle(self.screen, color, position, min(self.cell_width, self.cell_height) / 3)
+
+    def draw_arrow(self, 
+                   start, 
+                   length, 
+                   theta, 
+                   color):
+        """
+        Draws an arrow at a given position and angle.
+
+        Args:
+            start (tuple): (x, y) starting position.
+            length (int): Length of the arrow.
+            theta (float): Angle of the arrow.
+            color (tuple): RGB color.
+        """
+        tip_x = start[0] + length * math.cos(theta)
+        tip_y = start[1] - length * math.sin(theta)
+        wing_size = min(self.cell_width, self.cell_height) // 3
+        arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
+
+        # Calculate arrowhead points
+        left_wing = (tip_x - wing_size * math.cos(theta - math.pi / 6), 
+                    tip_y + wing_size * math.sin(theta - math.pi / 6))
+        right_wing = (tip_x - wing_size * math.cos(theta + math.pi / 6), 
+                    tip_y + wing_size * math.sin(theta + math.pi / 6))
+
+        # Draw main arrow line
+        pygame.draw.line(self.screen, color, start, (tip_x, tip_y), arrow_line_width)
+
+        # Draw arrowhead
+        pygame.draw.polygon(self.screen, color, [left_wing, (tip_x, tip_y), right_wing])
 
     def draw_robot_direction(self, color=(0, 255, 0)):
-      """
-      Draws an arrow indicating the robot's current orientation.
-      """
-      arrow_length = min(self.cell_width, self.cell_height)
-      # Calculate arrow tip (end point)
-      radius = self.cell_height // 2
-      x = self.robot_pose[0] * self.cell_width + radius
-      y = (self.grid_height - self.robot_pose[1]) * self.cell_height + radius
-      theta = self.robot_pose[2]
-
-      tip_x = x + arrow_length * math.cos(theta)
-      tip_y = y - arrow_length * math.sin(theta)
-      wing_size = min(self.cell_width, self.cell_height) // 3
-      arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
-
-
-      # Calculate arrowhead points
-      left_wing = (tip_x - wing_size * math.cos(theta - math.pi / 6), 
-                  tip_y + wing_size * math.sin(theta - math.pi / 6))
-      right_wing = (tip_x - wing_size * math.cos(theta + math.pi / 6), 
-                    tip_y + wing_size * math.sin(theta + math.pi / 6))
-
-      # Draw main arrow line
-      pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), arrow_line_width)
-
-      # Draw arrowhead
-      pygame.draw.polygon(self.screen, color, [left_wing, (tip_x, tip_y), right_wing])
+        """
+        Draws an arrow indicating the robot's current orientation.
+        """
+        arrow_length = min(self.cell_width, self.cell_height)
+        theta = self.robot_pose[2]
+        self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
 
     def draw_robot_velo(self, color=(0, 0, 255)):
-      """Draws a robot as an arrow at a given position and angle."""
-      magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
-      arrow_length = min(self.cell_width, self.cell_height) * magnitude
-      
-      # Calculate arrow center
-      radius = self.cell_height // 2
-      x = self.robot_pose[0] * self.cell_width + radius
-      y = (self.grid_height - self.robot_pose[1]) * self.cell_height + radius
+        """Draws a robot as an arrow at a given position and angle."""
+        magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
+        arrow_length = min(self.cell_width, self.cell_height) * magnitude
 
-      if self.twist.linear.x == 0:
-          theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
-      else: 
-          theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
+        if self.twist.linear.x == 0:
+            theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
+        else: 
+            theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
 
-      if (theta > 0 and self.twist.linear.y < 0):
-          theta += math.pi
+        if (theta > 0 and self.twist.linear.y < 0):
+            theta += math.pi
 
-      if (theta < 0 and self.twist.linear.x < 0):
-          theta += math.pi
+        if (theta < 0 and self.twist.linear.x < 0):
+            theta += math.pi
 
-      # Calculate arrow tip (end point)
-      tip_x = x + arrow_length * math.cos(theta) 
-      tip_y = y - arrow_length * math.sin(theta) 
-      wing_size = min(self.cell_width, self.cell_height) // 3
-      arrow_line_width = max(int(min(self.cell_width, self.cell_height) / 9), 1)
-
-
-      # Calculate arrowhead points
-      left_wing = (tip_x - wing_size * math.cos(theta - math.pi / 6), 
-                  tip_y + wing_size * math.sin(theta - math.pi / 6))
-      right_wing = (tip_x - wing_size * math.cos(theta + math.pi / 6), 
-                    tip_y + wing_size * math.sin(theta + math.pi / 6))
-
-      # Draw main arrow line
-      pygame.draw.line(self.screen, color, [x,y], (tip_x, tip_y), arrow_line_width)
-
-      # Draw arrowhead
-      pygame.draw.polygon(self.screen, color, [left_wing, (tip_x, tip_y), right_wing])
+        self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
 
     def visualization_loop(self):
         """
