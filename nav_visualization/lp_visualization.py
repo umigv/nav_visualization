@@ -275,40 +275,11 @@ class LocalPlanningVisualizer(Node):
 
         # Draw start and goal points
         self.draw_circle(self.pose_to_pixel(self.start_position), (0, 255, 0))  # Green for start
-        self.draw_circle(self.pose_to_pixel(self.goal_position), (0, 0, 255))    # Blue for goal
+        self.draw_circle(self.pose_to_pixel(self.goal_position), (0, 0, 255))    # Blue for goal        
 
-        self.publish_odometry()
-
-        x, y, theta = self.robot_pose
-
-        with self.twist_lock:
-            lin_vel_x, lin_vel_y, ang_vel = self.twist.linear.x, self.twist.linear.y, self.twist.angular.z
-
-        # Convert angular velocity to radians/second
-        ang_vel = math.radians(ang_vel)
-
-        speed_factor = 1
-        lin_vel_x *= speed_factor
-        lin_vel_y *= speed_factor
-        ang_vel *= speed_factor
-
-        # Update robot pose based on velocity
-        x += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.cos(theta) - lin_vel_y * math.sin(theta)
-        y += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.sin(theta) + lin_vel_y * math.cos(theta)
-        theta += LocalPlanningVisualizer.DELTA_TIME * ang_vel
-        self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]        
-        
-        # Append the current position to the robot's path
-        self.robot_path.append([x, y])
-
-        # Draw the robot's trajectory
-        radius = self.cell_height // 2
-        if len(self.robot_path) > 1:
-            path_pixels = [(pt[0] * self.cell_width + radius, (self.grid_height - pt[1]) * self.cell_height + radius) for pt in self.robot_path]
-            pygame.draw.lines(self.screen, (204, 255, 204), False, path_pixels, 2)
-
-        # Draw the robot's current position
+        # Draw robot, trajectory, velocity, and direction
         self.draw_circle(self.robot_pose_to_pixel(), (255, 0, 0))
+        self.draw_trajetory()
         self.draw_robot_direction()
         self.draw_robot_velo()
 
@@ -333,6 +304,31 @@ class LocalPlanningVisualizer(Node):
         # self.get_logger().info(f'Publishing pose {msg.pose.pose.position} to /odom')
         self.publisher.publish(msg)
 
+    def update_robot_pose(self):
+        """
+        Updates the robot's pose based on received command velocities.
+        """
+        x, y, theta = self.robot_pose
+
+        with self.twist_lock:
+            lin_vel_x, lin_vel_y, ang_vel = self.twist.linear.x, self.twist.linear.y, self.twist.angular.z
+
+        # Convert angular velocity to radians/second
+        ang_vel = math.radians(ang_vel)
+
+        speed_factor = 1
+        lin_vel_x *= speed_factor
+        lin_vel_y *= speed_factor
+        ang_vel *= speed_factor
+
+        # Update robot pose based on velocity
+        x += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.cos(theta) - lin_vel_y * math.sin(theta)
+        y += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.sin(theta) + lin_vel_y * math.cos(theta)
+        theta += LocalPlanningVisualizer.DELTA_TIME * ang_vel
+        self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]  
+
+        # Append the current position to the robot's path
+        self.robot_path.append([x, y])      
 
     def pose_to_pixel(self, pose):
         """
@@ -357,6 +353,14 @@ class LocalPlanningVisualizer(Node):
             tuple: (x, y) pixel coordinates.
         """
         return self.pose_to_pixel(self.robot_pose[:2])
+    
+    def draw_trajetory(self):
+        """
+        Draws the robot's trajectory on the screen.
+        """
+        if len(self.robot_path) > 1:
+            path_pixels = [self.pose_to_pixel(pt) for pt in self.robot_path]
+            pygame.draw.lines(self.screen, (204, 255, 204), False, path_pixels, 2)
 
     def draw_circle(self, position, color):
         """
@@ -436,6 +440,9 @@ class LocalPlanningVisualizer(Node):
                 rclpy.shutdown()
                 pygame.quit()
         
+        self.publish_odometry()
+        self.update_robot_pose()
+
         self.screen.fill((0, 0, 0))
         self.draw_scene()
         pygame.display.flip()
