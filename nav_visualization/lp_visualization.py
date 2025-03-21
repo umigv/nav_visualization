@@ -99,9 +99,6 @@ class LocalPlanningVisualizer(Node):
         self.window_height = self.get_parameter('window_height').get_parameter_value().integer_value
         self.window_width = self.get_parameter('window_width').get_parameter_value().integer_value
 
-        self.get_logger().info(f"window height: {self.window_height}, window width: {self.window_width}")
-        self.get_logger().info(f"start position: {self.start_position}, goal position: {self.goal_position}")
-
         # Determine cell size based on provided window dimensions or screen size
         screen_width, screen_height = pyautogui.size()
         cell_width = (self.window_width or screen_width) / self.grid_width
@@ -183,6 +180,8 @@ class LocalPlanningVisualizer(Node):
             self.goal_position = list(map(int, lines[1].split()))
 
             costmap = np.array([[int(num) for num in line.split()] for line in lines[2:]])
+            # Flip costmap so that (0,0) is the bottom left corner
+            costmap = np.flip(costmap, axis=0)
         return costmap
     
     def feedback_position_callback(self, feedback):
@@ -269,8 +268,10 @@ class LocalPlanningVisualizer(Node):
                 cost = self.costmap[y, x]
                 shade = 255 - int(255.0 / 100.0 * cost) if cost != -1 else 130
                 color = (shade, shade, shade) if cost != -1 else (127, 0, 255)
+                rect_y = (self.grid_height - 1 - y) * self.cell_height
+                rect_x = x * self.cell_width
                 pygame.draw.rect(self.screen, color, 
-                                 (x * self.cell_width, y * self.cell_height, self.cell_width, self.cell_height))
+                                 (rect_x, rect_y, self.cell_width, self.cell_height))
 
         # Draw start and goal points
         self.draw_circle(self.pose_to_pixel(self.start_position), (0, 255, 0))  # Green for start
