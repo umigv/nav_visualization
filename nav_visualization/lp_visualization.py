@@ -276,38 +276,26 @@ class LocalPlanningVisualizer(Node):
         self.draw_circle(self.pose_to_pixel(self.start_position), (0, 255, 0))  # Green for start
         self.draw_circle(self.pose_to_pixel(self.goal_position), (0, 0, 255))    # Blue for goal
 
-        
-        with self.twist_lock:
-            lin_vel_x, lin_vel_y, ang_vel = self.twist.linear.x, self.twist.linear.y, self.twist.angular.z
-
-        speed_factor = 0.25
-        lin_vel_x *= speed_factor
-        lin_vel_y *= speed_factor
-        ang_vel *= speed_factor
+        self.publish_odometry()
 
         x, y, theta = self.robot_pose
 
-        # Publish the robot odometry 
-        msg = Odometry()
-        cov_pose = PoseWithCovariance()
-        pose = Pose()
-        pose.position = Point(x=float(x), y=float(y), z=0.0)
-        qx, qy, qz, qw = euler_to_quaternion(0.0, 0.0, theta)  # Assuming theta is yaw
-        pose.orientation = Quaternion(x=qx, y=qy, z=qz, w=qw)
-        cov_pose.pose = pose
-        msg.pose = cov_pose
-        cov_twist = TwistWithCovariance()
-        cov_twist.twist = self.twist
-        msg.twist = cov_twist
+        with self.twist_lock:
+            lin_vel_x, lin_vel_y, ang_vel = self.twist.linear.x, self.twist.linear.y, self.twist.angular.z
+
+        # Convert angular velocity to radians/second
+        ang_vel = math.radians(ang_vel)
+
+        speed_factor = 1
+        lin_vel_x *= speed_factor
+        lin_vel_y *= speed_factor
+        ang_vel *= speed_factor
 
         # Update robot pose based on velocity
         x += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.cos(theta) - lin_vel_y * math.sin(theta)
         y += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.sin(theta) + lin_vel_y * math.cos(theta)
         theta += LocalPlanningVisualizer.DELTA_TIME * ang_vel
-        self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]
-
-        self.publisher.publish(msg)
-        # self.get_logger().info(f'Publishing pose {msg.pose.pose.position} to /odom')
+        self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]        
         
         # Append the current position to the robot's path
         self.robot_path.append([x, y])
@@ -322,6 +310,28 @@ class LocalPlanningVisualizer(Node):
         self.draw_circle(self.robot_pose_to_pixel(), (255, 0, 0))
         self.draw_robot_direction()
         self.draw_robot_velo()
+
+    def publish_odometry(self):
+        """
+        Publishes the robot's odometry to the /odom topic.
+        """
+        x, y, theta = self.robot_pose
+
+        msg = Odometry()
+        cov_pose = PoseWithCovariance()
+        pose = Pose()
+        pose.position = Point(x=float(x), y=float(y), z=0.0)
+        qx, qy, qz, qw = euler_to_quaternion(0.0, 0.0, theta)  # Assuming theta is yaw
+        pose.orientation = Quaternion(x=qx, y=qy, z=qz, w=qw)
+        cov_pose.pose = pose
+        msg.pose = cov_pose
+        cov_twist = TwistWithCovariance()
+        cov_twist.twist = self.twist
+        msg.twist = cov_twist
+
+        # self.get_logger().info(f'Publishing pose {msg.pose.pose.position} to /odom')
+        self.publisher.publish(msg)
+
 
     def pose_to_pixel(self, pose):
         """
@@ -401,16 +411,17 @@ class LocalPlanningVisualizer(Node):
         magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
         arrow_length = min(self.cell_width, self.cell_height) * magnitude
 
-        if self.twist.linear.x == 0:
-            theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
-        else: 
-            theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
+        with self.twist_lock:
+            if self.twist.linear.x == 0:
+                theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
+            else: 
+                theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
 
-        if (theta > 0 and self.twist.linear.y < 0):
-            theta += math.pi
+            if (theta > 0 and self.twist.linear.y < 0):
+                theta += math.pi
 
-        if (theta < 0 and self.twist.linear.x < 0):
-            theta += math.pi
+            if (theta < 0 and self.twist.linear.x < 0):
+                theta += math.pi
 
         self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
 
