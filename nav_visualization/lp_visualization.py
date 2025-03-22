@@ -76,7 +76,7 @@ class LocalPlanningVisualizer(Node):
         super().__init__('local_planning_visualizer')
         
         # Declare and get parameters
-        self.declare_parameter('costmap_file', 'costmap.txt')
+        self.declare_parameter('costmap_file', 'costmap3.txt')
         self.declare_parameter('window_height', None)
         self.declare_parameter('window_width', None)
         self.declare_parameter('topic', '/cmd_vel')
@@ -91,7 +91,9 @@ class LocalPlanningVisualizer(Node):
         
         
         # costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
-        costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
+        # costmap_path = os.path.join(os.path.dirname(__file__), "costmaps", costmap_file)
+        costmap_path = "/Users/george//arv/ws/src/nav_visualization/costmaps/costmap3.txt"
+        # costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
         self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
@@ -281,7 +283,7 @@ class LocalPlanningVisualizer(Node):
         self.draw_circle(self.robot_pose_to_pixel(), (255, 0, 0))
         self.draw_trajetory()
         self.draw_robot_direction()
-        self.draw_robot_velo()
+        # self.draw_robot_velo()
 
     def publish_odometry(self):
         """
@@ -314,18 +316,18 @@ class LocalPlanningVisualizer(Node):
             lin_vel_x, lin_vel_y, ang_vel = self.twist.linear.x, self.twist.linear.y, self.twist.angular.z
 
         # Convert angular velocity to radians/second
-        ang_vel = math.radians(ang_vel)
 
         speed_factor = 1
         lin_vel_x *= speed_factor
         lin_vel_y *= speed_factor
         ang_vel *= speed_factor
 
-        # Update robot pose based on velocity
-        x += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.cos(theta) - lin_vel_y * math.sin(theta)
-        y += LocalPlanningVisualizer.DELTA_TIME * lin_vel_x * math.sin(theta) + lin_vel_y * math.cos(theta)
+        # Update robot pose based on velocity 
         theta += LocalPlanningVisualizer.DELTA_TIME * ang_vel
-        self.robot_pose = [max(0, min(self.grid_width - 1, x)), max(0, min(self.grid_height - 1, y)), theta]  
+        x += LocalPlanningVisualizer.DELTA_TIME * (lin_vel_x * math.cos(theta) - lin_vel_y * math.sin(theta))
+        y += LocalPlanningVisualizer.DELTA_TIME * (lin_vel_x * math.sin(theta) + lin_vel_y * math.cos(theta))
+        
+        self.robot_pose = [max(0, min(self.grid_width, x)), max(0, min(self.grid_height, y)), theta]  
 
         # Append the current position to the robot's path
         self.robot_path.append([x, y])      
@@ -407,28 +409,29 @@ class LocalPlanningVisualizer(Node):
         """
         Draws an arrow indicating the robot's current orientation.
         """
-        arrow_length = min(self.cell_width, self.cell_height)
+        magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
+        arrow_length = min(self.cell_width, self.cell_height) * magnitude
         theta = self.robot_pose[2]
         self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
 
-    def draw_robot_velo(self, color=(0, 0, 255)):
-        """Draws a robot as an arrow at a given position and angle."""
-        magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
-        arrow_length = min(self.cell_width, self.cell_height) * magnitude
+    # def draw_robot_velo(self, color=(0, 0, 255)):
+    #     """Draws a robot as an arrow at a given position and angle."""
+    #     magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
+    #     arrow_length = min(self.cell_width, self.cell_height) * magnitude
 
-        with self.twist_lock:
-            if self.twist.linear.x == 0:
-                theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
-            else: 
-                theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
+    #     with self.twist_lock:
+    #         if self.twist.linear.x == 0:
+    #             theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
+    #         else: 
+    #             theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
 
-            if (theta > 0 and self.twist.linear.y < 0):
-                theta += math.pi
+    #         if (theta > 0 and self.twist.linear.y < 0):
+    #             theta += math.pi
 
-            if (theta < 0 and self.twist.linear.x < 0):
-                theta += math.pi
+    #         if (theta < 0 and self.twist.linear.x < 0):
+    #             theta += math.pi
 
-        self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
+    #     self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
 
     def visualization_loop(self):
         """
