@@ -73,16 +73,23 @@ class LocalPlanningVisualizer(Node):
         costmap_file = self.get_parameter('costmap_file').get_parameter_value().string_value
         topic = self.get_parameter('topic').get_parameter_value().string_value
 
-        # Generate costmap path and load costmap
+        # Resolve the costmap path by removing unnecessary directory levels
         script_directory = os.path.dirname(os.path.abspath(__file__))
-        for _ in range(4):  # Move up 4 directories
+        current_folder = os.path.basename(script_directory)
+        while current_folder != "build":  
             script_directory = os.path.dirname(script_directory)
+            current_folder = os.path.basename(script_directory)
+
+        # Remove build at end of directory
+        script_directory = os.path.dirname(script_directory)
+
+        costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
         
         
         # costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
         # costmap_path = os.path.join(os.path.dirname(__file__), "costmaps", costmap_file)
         # costmap_path = "/Users/george//arv/ws/src/nav_visualization/costmaps/costmap3.txt"
-        costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
+        # costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
         self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
