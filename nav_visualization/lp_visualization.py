@@ -44,7 +44,6 @@ import numpy as np
 import threading
 import math
 import os
-import pyautogui
 from ament_index_python.packages import get_package_share_directory
 from scipy.spatial.transform import Rotation 
 
@@ -76,14 +75,12 @@ class LocalPlanningVisualizer(Node):
 
         # Generate costmap path and load costmap
         script_directory = os.path.dirname(os.path.abspath(__file__))
-        for _ in range(6):  # Move up 6 directories
+        for _ in range(4):  # Move up 4 directories
             script_directory = os.path.dirname(script_directory)
         
         
-        # costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
-        # costmap_path = os.path.join(os.path.dirname(__file__), "costmaps", costmap_file)
-        # costmap_path = "/Users/george//arv/ws/src/nav_visualization/costmaps/costmap3.txt"
-        costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
+        costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
+        # costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
         self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
@@ -92,7 +89,8 @@ class LocalPlanningVisualizer(Node):
         self.window_width = self.get_parameter('window_width').get_parameter_value().integer_value
 
         # Determine cell size based on provided window dimensions or screen size
-        screen_width, screen_height = pyautogui.size()
+        screen_width = 800
+        screen_height = 800
         cell_width = (self.window_width or screen_width) / self.grid_width
         cell_height = (self.window_height or screen_height) / self.grid_height
         cell_size = int(min(cell_width, cell_height))

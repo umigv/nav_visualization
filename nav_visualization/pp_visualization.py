@@ -35,7 +35,6 @@ import rclpy
 import pygame
 import numpy as np
 import os
-import pyautogui
 
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -94,7 +93,8 @@ class PathPlanningVisualizer(Node):
         self.window_width = self.get_parameter('window_width').get_parameter_value().integer_value
 
         # Determine cell size based on window or screen size
-        screen_width, screen_height = pyautogui.size()
+        screen_width = 800
+        screen_height = 800
         cell_width = (self.window_width or screen_width) / self.grid_width
         cell_height = (self.window_height or screen_height) / self.grid_height
         cell_size = int(min(cell_width, cell_height))

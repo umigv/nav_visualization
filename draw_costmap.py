@@ -25,7 +25,6 @@ The output costmap is saved in the "costmaps" directory, located one level up fr
 
 import pygame
 import sys
-import pyautogui
 import os
 
 def create_grid(width, height):
@@ -117,7 +116,8 @@ def main():
     goal_y = int(input("Enter goal y coordinate: "))
 
     # Get screen size and adjust cell size accordingly
-    screen_width, screen_height = pyautogui.size()
+    screen_width = 800
+    screen_height = 800
     cell_width = screen_width / width
     cell_height = screen_height / height
     cell_size = int(min(cell_width, cell_height))
