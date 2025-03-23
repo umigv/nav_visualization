@@ -79,8 +79,10 @@ class LocalPlanningVisualizer(Node):
             script_directory = os.path.dirname(script_directory)
         
         
-        costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
-        # costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
+        # costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
+        # costmap_path = os.path.join(os.path.dirname(__file__), "costmaps", costmap_file)
+        # costmap_path = "/Users/george//arv/ws/src/nav_visualization/costmaps/costmap3.txt"
+        costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
         self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
