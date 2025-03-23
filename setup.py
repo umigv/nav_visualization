@@ -67,8 +67,8 @@ setup(
     entry_points={
         'console_scripts': [
             # Entry points for executable scripts (ensure these modules have a main() function)
-            'path_planning_visualizer = nav_visualization.pp_visualization:main',
-            'local_planning_visualizer = nav_visualization.lp_visualization:main',
+            'pp_vis = nav_visualization.pp_visualization:main',
+            'lp_vis = nav_visualization.lp_visualization:main',
             'dummy_position_publisher = nav_visualization.dummy_position_publisher:main',
             'dummy_twist_publisher = nav_visualization.dummy_twist_publisher:main',
         ],
