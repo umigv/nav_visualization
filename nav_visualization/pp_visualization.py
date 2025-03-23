@@ -79,7 +79,7 @@ class PathPlanningVisualizer(Node):
 
         # Resolve the costmap path by removing unnecessary directory levels
         script_directory = os.path.dirname(os.path.abspath(__file__))
-        for _ in range(6):  # Move up 6 directories
+        for _ in range(3):  # Move up 6 directories
             script_directory = os.path.dirname(script_directory)
 
         costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
@@ -97,11 +97,11 @@ class PathPlanningVisualizer(Node):
         screen_height = 800
         cell_width = (self.window_width or screen_width) / self.grid_width
         cell_height = (self.window_height or screen_height) / self.grid_height
-        cell_size = int(min(cell_width, cell_height))
+        self.cell_size = int(min(cell_width, cell_height))
 
         # Update window dimensions based on calculated cell size
-        self.window_height = self.grid_height * cell_size
-        self.window_width = self.grid_width * cell_size
+        self.window_height = self.grid_height * self.cell_size
+        self.window_width = self.grid_width * self.cell_size
 
         # Initialize robot position at the start
         self.robot_position = self.start_position.copy()
@@ -203,7 +203,11 @@ class PathPlanningVisualizer(Node):
             lines = f.readlines()
             self.start_position = list(map(int, lines[0].split()))
             self.goal_position = list(map(int, lines[1].split()))
-            return np.array([[int(num) for num in line.split()] for line in lines[2:]])
+
+            costmap = np.array([[int(num) for num in line.split()] for line in lines[2:]])
+            # Flip costmap so that (0,0) is the bottom left corner
+            costmap = np.flip(costmap, axis=0)
+        return costmap
 
     def feedback_position_callback(self, feedback):
         """
@@ -235,22 +239,53 @@ class PathPlanningVisualizer(Node):
         # Draw costmap
         for y in range(self.grid_height):
             for x in range(self.grid_width):
-                if self.costmap[y, x] >= 0:
-                    shade = 255 - int(255.0 / 100.0 * self.costmap[y, x])
-                    color = (shade, shade, shade)
-                else:
-                    color = (127, 0, 255)
+                cost = self.costmap[y, x]
+                shade = 255 - int(255.0 / 100.0 * cost) if cost != -1 else 130
+                color = (shade, shade, shade) if cost != -1 else (127, 0, 255)
+                rect_y = (self.grid_height - 1 - y) * self.cell_size
+                rect_x = x * self.cell_size
+                pygame.draw.rect(self.screen, color, 
+                                 (rect_x, rect_y, self.cell_size, self.cell_size))
 
-                pygame.draw.rect(self.screen, color, (x * cell_width, y * cell_height, cell_width, cell_height))
         
         # Draw robot and path
         for point in self.robot_path:
             # Draw path as light green
-            pygame.draw.circle(self.screen, (204, 255, 204), (point[0] * cell_width + radius, point[1] * cell_height + radius), radius)
-        # Draw robot as red
-        pygame.draw.circle(self.screen, (255, 0, 0), (self.robot_position[0] * cell_width + radius, self.robot_position[1] * cell_height + radius), radius)
+            self.draw_circle(self.pose_to_pixel(point), (204, 255, 204))
+        
+        # Draw start and goal points
+        self.draw_circle(self.pose_to_pixel(self.start_position), (0, 255, 0))  # Green for start
+        self.draw_circle(self.pose_to_pixel(self.goal_position), (0, 0, 255))    # Blue for goal        
+
+        # Draw robot
+        self.draw_circle(self.pose_to_pixel(self.robot_position), (255, 0, 0))
 
         pygame.display.flip()
+
+    def draw_circle(self, position, color):
+            """
+            Draws a circle at a given position on the screen.
+
+            Args:
+                position (list): [x, y] coordinates.
+                color (tuple): RGB color.
+            """
+            pygame.draw.circle(self.screen, color, position, min(self.cell_size, self.cell_size) / 3)
+
+    def pose_to_pixel(self, pose):
+            """
+            Converts a pose to pixel coordinates. For example, for a pose of [0,0],
+            returns the pixel coordinates of the center of the costmap cell in the
+            bottom left corner.
+
+            Args:
+                pose (list): [x, y] coordinates.
+
+            Returns:
+                tuple: (x, y) pixel coordinates.
+            """
+            return (pose[0] * self.cell_size + self.cell_size / 2, 
+                (self.grid_height - 1 - pose[1]) * self.cell_size + self.cell_size / 2)
 
 
 def main(args=None):
