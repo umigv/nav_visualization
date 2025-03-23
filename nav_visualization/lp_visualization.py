@@ -46,24 +46,14 @@ import math
 import os
 import pyautogui
 from ament_index_python.packages import get_package_share_directory
+from scipy.spatial.transform import Rotation 
 
 def euler_to_quaternion(roll, pitch, yaw):
     """
     Convert Euler angles to quaternion
     """
-    cy = math.cos(yaw * 0.5)
-    sy = math.sin(yaw * 0.5)
-    cp = math.cos(pitch * 0.5)
-    sp = math.sin(pitch * 0.5)
-    cr = math.cos(roll * 0.5)
-    sr = math.sin(roll * 0.5)
-
-    qw = cr * cp * cy + sr * sp * sy
-    qx = sr * cp * cy - cr * sp * sy
-    qy = cr * sp * cy + sr * cp * sy
-    qz = cr * cp * sy - sr * sp * cy
-
-    return qx, qy, qz, qw
+    rot = Rotation.from_euler('xyz', [roll, pitch, yaw], degrees=False)
+    return rot.as_quat()
 
 class LocalPlanningVisualizer(Node):
     """
@@ -92,8 +82,8 @@ class LocalPlanningVisualizer(Node):
         
         # costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
         # costmap_path = os.path.join(os.path.dirname(__file__), "costmaps", costmap_file)
-        costmap_path = "/Users/george//arv/ws/src/nav_visualization/costmaps/costmap3.txt"
-        # costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
+        # costmap_path = "/Users/george//arv/ws/src/nav_visualization/costmaps/costmap3.txt"
+        costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
         self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
@@ -330,7 +320,7 @@ class LocalPlanningVisualizer(Node):
         self.robot_pose = [max(0, min(self.grid_width, x)), max(0, min(self.grid_height, y)), theta]  
 
         # Append the current position to the robot's path
-        self.robot_path.append([x, y])      
+        self.robot_path.append([x, y])            
 
     def pose_to_pixel(self, pose):
         """
