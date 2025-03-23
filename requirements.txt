@@ -18,3 +18,7 @@ tqdm==4.66.5
 urllib3==2.2.3
 wheel==0.44.0
 zstandard==0.23.0
+pyautogui==0.9.54
+pygame==2.5.2
+numpy==1.26.4
+rclpy==3.3.11
