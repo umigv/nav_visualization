@@ -62,7 +62,7 @@ def generate_launch_description():
         # Launch the Path Planning Visualizer Node
         Node(
             package='nav_visualization',
-            executable='path_planning_visualizer',
+            executable='pp_vis',
             name='path_planning_visualizer',
             output='screen',
             parameters=params

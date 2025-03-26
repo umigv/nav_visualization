@@ -65,7 +65,7 @@ class LocalPlanningVisualizer(Node):
         super().__init__('local_planning_visualizer')
         
         # Declare and get parameters
-        self.declare_parameter('costmap_file', 'costmap3.txt')
+        self.declare_parameter('costmap_file', 'costmap.txt')
         self.declare_parameter('window_height', 800)
         self.declare_parameter('window_width', 800)
         self.declare_parameter('twist_topic', '/cmd_vel')

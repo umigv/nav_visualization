@@ -60,8 +60,8 @@ class PathPlanningVisualizer(Node):
 
         # Declare and retrieve parameters
         self.declare_parameter('costmap_file', 'costmap.txt')
-        self.declare_parameter('window_height', None)
-        self.declare_parameter('window_width', None)
+        self.declare_parameter('window_height', 800)
+        self.declare_parameter('window_width', 800)
 
         # Create an action client for path planning
         self._action_client = ActionClient(self, NavigateToGoal, 'navigate_to_goal')

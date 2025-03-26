@@ -57,6 +57,14 @@ setup(
         # Launch file for path planning visualization node
         (os.path.join('share', package_name, 'launch'), 
          [os.path.join('launch', 'pp_visualization.launch.py')]),
+
+         # Launch parameters for path planning visualization node
+        (os.path.join('share', package_name, 'config'), 
+         [os.path.join('config', 'pp_vis_params.yaml')]),
+
+         # Launch parameters for local planning visualization node
+        (os.path.join('share', package_name, 'config'), 
+         [os.path.join('config', 'lp_vis_params.yaml')]),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

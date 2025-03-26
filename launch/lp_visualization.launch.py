@@ -77,7 +77,7 @@ def generate_launch_description():
         # Visualization Node: local_planning_visualizer
         Node(
             package='nav_visualization',
-            executable='local_planning_visualizer',
+            executable='lp_vis',
             name='local_planning_visualizer',
             output='screen',
             # parameters=[{
