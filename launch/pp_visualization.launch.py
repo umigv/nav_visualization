@@ -23,37 +23,41 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    # Declare launch arguments for dynamic configuration
-    costmap_file_arg = DeclareLaunchArgument(
-        'costmap_file',
-        default_value='costmap.txt',
-        description='Path to the costmap file'
-    )
+    params = [
+        PathJoinSubstitution([
+        FindPackageShare('nav_visualization'),
+        'config',
+        'pp_vis_params.yaml'
+    ])]
+    # # Declare launch arguments for dynamic configuration
+    # costmap_file_arg = DeclareLaunchArgument(
+    #     'costmap_file',
+    #     default_value='costmap.txt',
+    #     description='Path to the costmap file'
+    # )
 
-    window_height_arg = DeclareLaunchArgument(
-        'window_height',
-        default_value='800',  # Provide a default value to avoid errors
-        description='Height of the window in pixels'
-    )
+    # window_height_arg = DeclareLaunchArgument(
+    #     'window_height',
+    #     default_value='800',  # Provide a default value to avoid errors
+    #     description='Height of the window in pixels'
+    # )
 
-    window_width_arg = DeclareLaunchArgument(
-        'window_width',
-        default_value='800',  # Provide a default value to avoid errors
-        description='Width of the window in pixels'
-    )
+    # window_width_arg = DeclareLaunchArgument(
+    #     'window_width',
+    #     default_value='800',  # Provide a default value to avoid errors
+    #     description='Width of the window in pixels'
+    # )
 
-    # Create LaunchConfiguration variables from the declared arguments
-    costmap_file = LaunchConfiguration('costmap_file')
-    window_height = LaunchConfiguration('window_height')
-    window_width = LaunchConfiguration('window_width')
+    # # Create LaunchConfiguration variables from the declared arguments
+    # costmap_file = LaunchConfiguration('costmap_file')
+    # window_height = LaunchConfiguration('window_height')
+    # window_width = LaunchConfiguration('window_width')
 
     return LaunchDescription([
-        # Include the declared launch arguments in the launch description
-        costmap_file_arg,
-        window_height_arg,
-        window_width_arg,
 
         # Launch the Path Planning Visualizer Node
         Node(
@@ -61,10 +65,6 @@ def generate_launch_description():
             executable='path_planning_visualizer',
             name='path_planning_visualizer',
             output='screen',
-            parameters=[{
-                'costmap_file': costmap_file,
-                'window_height': window_height,
-                'window_width': window_width
-            }]
+            parameters=params
         )
     ])

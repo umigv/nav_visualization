@@ -24,46 +24,55 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    # Declare launch arguments for dynamic configuration
-    costmap_file_arg = DeclareLaunchArgument(
-        'costmap_file',
-        default_value='costmap.txt',
-        description='Path to the costmap file.'
-    )
 
-    window_height_arg = DeclareLaunchArgument(
-        'window_height',
-        default_value='800',
-        description='Height of the visualization window in pixels.'
-    )
+    params = [
+        PathJoinSubstitution([
+        FindPackageShare('nav_visualization'),
+        'config',
+        'lp_vis_params.yaml'
+    ])]
+    # # Declare launch arguments for dynamic configuration
+    # costmap_file_arg = DeclareLaunchArgument(
+    #     'costmap_file',
+    #     default_value='costmap.txt',
+    #     description='Path to the costmap file.'
+    # )
 
-    window_width_arg = DeclareLaunchArgument(
-        'window_width',
-        default_value='800',
-        description='Width of the visualization window in pixels.'
-    )
+    # window_height_arg = DeclareLaunchArgument(
+    #     'window_height',
+    #     default_value='800',
+    #     description='Height of the visualization window in pixels.'
+    # )
 
-    topic_arg = DeclareLaunchArgument(
-        'topic',
-        default_value='/cmd_vel',
-        description='ROS2 topic to publish Twist messages.'
-    )
+    # window_width_arg = DeclareLaunchArgument(
+    #     'window_width',
+    #     default_value='800',
+    #     description='Width of the visualization window in pixels.'
+    # )
+
+    # topic_arg = DeclareLaunchArgument(
+    #     'topic',
+    #     default_value='/cmd_vel',
+    #     description='ROS2 topic to publish Twist messages.'
+    # )
 
     # Use LaunchConfiguration to substitute the declared arguments
-    costmap_file = LaunchConfiguration('costmap_file')
-    window_height = LaunchConfiguration('window_height')
-    window_width = LaunchConfiguration('window_width')
-    topic = LaunchConfiguration('topic')
+    # costmap_file = LaunchConfiguration('costmap_file')
+    # window_height = LaunchConfiguration('window_height')
+    # window_width = LaunchConfiguration('window_width')
+    # topic = LaunchConfiguration('topic')
 
     # Create and return the LaunchDescription object with both nodes
     return LaunchDescription([
-        # Declare the launch arguments
-        costmap_file_arg,
-        window_height_arg,
-        window_width_arg,
-        topic_arg,
+        # # Declare the launch arguments
+        # costmap_file_arg,
+        # window_height_arg,
+        # window_width_arg,
+        # topic_arg,
 
         # Visualization Node: local_planning_visualizer
         Node(
@@ -71,11 +80,12 @@ def generate_launch_description():
             executable='local_planning_visualizer',
             name='local_planning_visualizer',
             output='screen',
-            parameters=[{
-                'costmap_file': costmap_file,
-                'window_height': window_height,
-                'window_width': window_width,
-                'topic': topic
-            }]
+            # parameters=[{
+            #     'costmap_file': costmap_file,
+            #     'window_height': window_height,
+            #     'window_width': window_width,
+            #     'topic': topic
+            # }]
+            parameters=params
         ),
     ])

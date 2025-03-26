@@ -66,12 +66,13 @@ class LocalPlanningVisualizer(Node):
         
         # Declare and get parameters
         self.declare_parameter('costmap_file', 'costmap3.txt')
-        self.declare_parameter('window_height', None)
-        self.declare_parameter('window_width', None)
-        self.declare_parameter('topic', '/cmd_vel')
+        self.declare_parameter('window_height', 800)
+        self.declare_parameter('window_width', 800)
+        self.declare_parameter('twist_topic', '/cmd_vel')
+        self.declare_parameter('odom_topic', '/odom')
 
         costmap_file = self.get_parameter('costmap_file').get_parameter_value().string_value
-        topic = self.get_parameter('topic').get_parameter_value().string_value
+        topic = self.get_parameter('twist_topic').get_parameter_value().string_value
 
         # Resolve the costmap path by removing unnecessary directory levels
         script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -98,10 +99,8 @@ class LocalPlanningVisualizer(Node):
         self.window_width = self.get_parameter('window_width').get_parameter_value().integer_value
 
         # Determine cell size based on provided window dimensions or screen size
-        screen_width = 800
-        screen_height = 800
-        cell_width = (self.window_width or screen_width) / self.grid_width
-        cell_height = (self.window_height or screen_height) / self.grid_height
+        cell_width = (self.window_width) / self.grid_width
+        cell_height = (self.window_height) / self.grid_height
         cell_size = int(min(cell_width, cell_height))
 
         self.window_height = self.grid_height * cell_size
@@ -133,7 +132,7 @@ class LocalPlanningVisualizer(Node):
 
         self.publisher = self.create_publisher(
             Odometry,
-            '/odom',
+            self.get_parameter('odom_topic').get_parameter_value().string_value,
             10
         )
 

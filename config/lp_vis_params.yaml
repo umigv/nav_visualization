@@ -1,0 +1,7 @@
+
+ros__parameters:
+  costmap_file: "costmap3.txt"
+  window_height: 800
+  window_width: 800
+  twist_topic: "/cmd_vel"
+  odom_topic: "/odom"
