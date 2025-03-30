@@ -15,7 +15,7 @@ Features:
 
 Usage:
 1. Run a ROS2 environment.
-2. Execute this script.
+2. Run ros2 run nav_visualization lp_vis 
 3. The window will display the costmap with real-time updates from the Twist topic.
 4. Close the pygame window to terminate the script.
 
@@ -85,12 +85,6 @@ class LocalPlanningVisualizer(Node):
         script_directory = os.path.dirname(script_directory)
 
         costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
-        
-        
-        # costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
-        # costmap_path = os.path.join(os.path.dirname(__file__), "costmaps", costmap_file)
-        # costmap_path = "/Users/george//arv/ws/src/nav_visualization/costmaps/costmap3.txt"
-        # costmap_path = '/home/arvuser/arv-ws/src/nav_visualization/costmaps/costmap3.txt'
         self.costmap = self.read_costmap(costmap_path)
         self.grid_height, self.grid_width = self.costmap.shape
 
@@ -409,25 +403,6 @@ class LocalPlanningVisualizer(Node):
         arrow_length = min(self.cell_width, self.cell_height) * magnitude
         theta = self.robot_pose[2]
         self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
-
-    # def draw_robot_velo(self, color=(0, 0, 255)):
-    #     """Draws a robot as an arrow at a given position and angle."""
-    #     magnitude = int((((self.twist.linear.x ** 2 + self.twist.linear.y ** 2)) ** 0.5) * 5)
-    #     arrow_length = min(self.cell_width, self.cell_height) * magnitude
-
-    #     with self.twist_lock:
-    #         if self.twist.linear.x == 0:
-    #             theta = math.atan(self.twist.linear.y / (self.twist.linear.x + 0.00001))
-    #         else: 
-    #             theta = math.atan(self.twist.linear.y / (self.twist.linear.x))
-
-    #         if (theta > 0 and self.twist.linear.y < 0):
-    #             theta += math.pi
-
-    #         if (theta < 0 and self.twist.linear.x < 0):
-    #             theta += math.pi
-
-    #     self.draw_arrow(self.robot_pose_to_pixel(), arrow_length, theta, color)
 
     def visualization_loop(self):
         """
