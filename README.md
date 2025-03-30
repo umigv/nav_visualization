@@ -256,3 +256,83 @@ This demonstrates visualizing the entire navigation process using `nav_infrastru
 ![Example of local planning visualization](images/local_planning.png "Example of local planning visualization")
 
 ---
+
+## 10. TLDR: Quick Start Guide for Local Planning Visualization
+
+This assumes you have ROS 2 Humble installed and configured.
+
+1.  **Clone Repositories:**
+    ```bash
+    # Navigate to your ROS 2 workspace source directory
+    cd <your_ros2_ws>/src
+
+    # Clone the necessary repositories
+    git clone https://github.com/umigv/nav_visualization
+    git clone https://github.com/umigv/nav_infrastructure
+    git clone https://github.com/umigv/nav_plugins
+    ```
+
+2.  **Install Dependencies:**
+    ```bash
+    # Navigate to the nav_visualization package
+    cd <your_ros2_ws>/src/nav_visualization
+
+    # Install Python requirements
+    pip install -r requirements.txt
+
+    # Install system dependencies for pygame (example for Debian/Ubuntu)
+    sudo apt-get update
+    sudo apt-get install -y python3-pygame libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+    ```
+
+3.  **Build Packages:**
+    ```bash
+    # Navigate back to your workspace root
+    cd <your_ros2_ws>
+
+    # Build the packages
+    colcon build --packages-select nav_visualization nav_infrastructure nav_plugins infra_interfaces
+    ```
+
+4.  **Configure Infrastructure Parameters:**
+    *   Edit the file: `<your_ros2_ws>/src/nav_infrastructure/infra_launch/config/infra_params.yaml`
+    *   Set `planner_plugin`: e.g., `"planner_plugins::BFSPlanner"`
+    *   Set `controller_plugin`: e.g., `"controller_plugins::PurePursuitController"`
+    *   Ensure `cmd_vel_topic` is `/cmd_vel` (or matches `lp_vis_params.yaml`).
+    *   Ensure `odom_topic` is `/odom` (or matches `lp_vis_params.yaml`).
+    *   Set `isolate_path_planner: false`.
+
+5.  **(Optional) Configure Visualization Costmap:**
+    *   To use a custom costmap:
+        *   Create it using `python3 <your_ros2_ws>/src/nav_visualization/nav_visualization/draw_costmap.py`.
+        *   Edit `<your_ros2_ws>/src/nav_visualization/config/lp_vis_params.yaml` and change `costmap_file` to your new filename (e.g., `"my_costmap.txt"`). Rebuild if you change config files (`colcon build --packages-select nav_visualization`).
+    *   Otherwise, the default `costmap3.txt` specified in `lp_vis_params.yaml` will be used.
+
+6.  **Launch Infrastructure (Terminal 1):**
+    ```bash
+    # Navigate to your workspace root
+    cd <your_ros2_ws>
+
+    # Source the setup file
+    source install/setup.bash
+
+    # Launch the infrastructure
+    ros2 launch infra_launch infra.launch.py
+    ```
+
+7.  **Launch Local Planning Visualization (Terminal 2):**
+    ```bash
+    # Navigate to your workspace root
+    cd <your_ros2_ws>
+
+    # Source the setup file
+    source install/setup.bash
+
+    # Launch the LP visualizer
+    ros2 launch nav_visualization lp_vis.launch.py
+
+    # --- OR --- if you want to override the costmap specified in the params file:
+    # ros2 launch nav_visualization lp_vis.launch.py costmap_file:=your_other_costmap.txt
+    ```
+
+8.  **Observe:** The visualization window should appear and automatically trigger the navigation process defined by the start/goal in the loaded costmap file. You should see the simulated robot navigate the environment.
