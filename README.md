@@ -15,7 +15,7 @@ This package allows users to:
 ## 2. Dependencies
 
 *   **ROS 2:** Humble or later (specifically `rclpy`, `launch`, `launch_ros`, `geometry_msgs`, `nav_msgs`, `std_msgs`, `ament_index_python`).
-*   **Python Libraries:** `pygame` (for visualization), `numpy` (for grid manipulation), `os`, `sys`, `math`, `threading`, `pyautogui` (for `draw_costmap.py`), `scipy` (for `lp_visualization.py` orientation calculations). See `requirements.txt` for specific versions tested.
+*   **Python Libraries:** `pygame` (for visualization), `numpy` (for grid manipulation), `os`, `sys`, `math`, `threading`, `pyautogui` (for `draw_costmap.py`), `scipy` (for `lp_vis.py` orientation calculations). See `requirements.txt` for specific versions tested.
 *   **Related Custom Packages:**
     *   `nav_infrastructure`: Provides the core planning (`planner_server`) and control (`controller_server`) action servers. `nav_visualization` often connects to these servers or subscribes to topics published by them.
     *   `nav_plugins`: Contains the actual planning and control algorithms loaded by `nav_infrastructure`.
@@ -76,7 +76,7 @@ The visualization tools rely on text files to define the environment:
 
 These scripts are the primary entry points for visualization, typically run via launch files. They are installed as executables via `setup.py`.
 
-### 5.1. `pp_visualization.py` (Executable: `pp_vis`)
+### 5.1. `pp_vis.py` (Executable: `pp_vis`)
 
 *   **Purpose:** Visualizes the **global path planning** process. It sends a goal to the `NavigateToGoal` action server (provided by `nav_infrastructure`'s `planner_server`) and displays the resulting path and robot's progress based on action feedback.
 *   **How it Works:**
@@ -94,7 +94,7 @@ These scripts are the primary entry points for visualization, typically run via 
     *   `window_width` (int): Desired width of the visualization window.
 *   **Typical Usage:** Run alongside `nav_infrastructure`'s `planner_server` node. Launch using `pp_vis.launch.py`.
 
-### 5.2. `lp_visualization.py` (Executable: `lp_vis`)
+### 5.2. `lp_vis.py` (Executable: `lp_vis`)
 
 *   **Purpose:** Visualizes the **local planning and control** process. It simulates or displays the robot's continuous movement based on `geometry_msgs/Twist` commands, typically published by `nav_infrastructure`'s `controller_server`. It also publishes simulated `nav_msgs/Odometry`.
 *   **How it Works:**
@@ -133,14 +133,14 @@ These scripts are the primary entry points for visualization, typically run via 
 *   **Purpose:** Simulates the feedback of a path planner by publishing `geometry_msgs/Point` messages representing the robot's position on a topic (default: `/robot_position`).
 *   **How it Works:** Reads a costmap file to get dimensions, starts near the center, and publishes slightly randomized positions within the grid boundaries at a fixed rate.
 *   **Parameters:** `costmap_file`, `update_rate`, `topic`.
-*   **Usage:** Used in the `dummy-demo-pp.py` launch file for testing `pp_visualization.py` without needing the actual `planner_server`.
+*   **Usage:** Used in the `dummy-demo-pp.py` launch file for testing `pp_vis.py` without needing the actual `planner_server`.
 
 ### 6.3. `dummy_twist_publisher.py` (Executable: `dummy_twist_publisher`)
 
 *   **Purpose:** Simulates the output of a controller by publishing `geometry_msgs/Twist` messages with smoothly varying linear and angular velocities using sine/cosine functions.
 *   **How it Works:** Publishes `Twist` messages to a specified topic (default: `/robot_twist`) at a fixed rate.
 *   **Parameters:** `topic`, `update_rate`.
-*   **Usage:** Used in the `dummy-demo-lp.py` launch file for testing `lp_visualization.py` without needing the actual `controller_server`.
+*   **Usage:** Used in the `dummy-demo-lp.py` launch file for testing `lp_vis.py` without needing the actual `controller_server`.
 
 ## 7. Launch Files
 
@@ -252,5 +252,7 @@ This demonstrates visualizing the entire navigation process using `nav_infrastru
     # ros2 launch nav_visualization lp_vis.launch.py costmap_file:=costmap4.txt
     ```
 5.  **Observe:** The `lp_vis` window will open. It automatically sends a `NavigateToGoal` action request (using start/goal from the costmap file) to the `planner_server` running in Terminal 1. The planner calculates a path, sends it to the `controller_server` (via the `FollowPath` action called internally by the planner server when `isolate_path_planner` is false). The `controller_server` reads odometry from `/odom` (published by `lp_vis`) and publishes `/cmd_vel` messages. `lp_vis` subscribes to `/cmd_vel`, updates its internal pose, draws the robot's movement, and publishes `/odom`, closing the loop. You should see the red robot circle move along a green path from the start (green circle) to the goal (blue circle) on the visualized costmap.
+
+![Example of local planning visualization](images/local_planning.png "Example of local planning visualization")
 
 ---
