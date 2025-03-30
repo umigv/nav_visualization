@@ -52,11 +52,11 @@ setup(
         
         # Launch file for local planning visualization node
         (os.path.join('share', package_name, 'launch'), 
-         [os.path.join('launch', 'lp_visualization.launch.py')]),
+         [os.path.join('launch', 'lp_vis.launch.py')]),
         
         # Launch file for path planning visualization node
         (os.path.join('share', package_name, 'launch'), 
-         [os.path.join('launch', 'pp_visualization.launch.py')]),
+         [os.path.join('launch', 'pp_vis.launch.py')]),
 
          # Launch parameters for path planning visualization node
         (os.path.join('share', package_name, 'config'), 
