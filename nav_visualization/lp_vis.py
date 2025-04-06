@@ -77,12 +77,10 @@ class LocalPlanningVisualizer(Node):
         # Resolve the costmap path by removing unnecessary directory levels
         script_directory = os.path.dirname(os.path.abspath(__file__))
         current_folder = os.path.basename(script_directory)
-        while current_folder != "build":  
+        while current_folder != "ws":  
             script_directory = os.path.dirname(script_directory)
             current_folder = os.path.basename(script_directory)
 
-        # Remove build at end of directory
-        script_directory = os.path.dirname(script_directory)
 
         costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
         self.costmap = self.read_costmap(costmap_path)

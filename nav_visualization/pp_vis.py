@@ -59,7 +59,7 @@ class PathPlanningVisualizer(Node):
         super().__init__('path_planning_visualizer')
 
         # Declare and retrieve parameters
-        self.declare_parameter('costmap_file', 'costmap.txt')
+        self.declare_parameter('costmap_file', 'costmap3.txt')
         self.declare_parameter('window_height', 800)
         self.declare_parameter('window_width', 800)
 
@@ -67,6 +67,7 @@ class PathPlanningVisualizer(Node):
         self._action_client = ActionClient(self, NavigateToGoal, 'navigate_to_goal')
 
         # Start the navigation process
+        print("Sending goal")
         self.send_goal()
 
     def variable_initiation(self, costmap_file):
@@ -77,15 +78,14 @@ class PathPlanningVisualizer(Node):
             costmap_file (str): The filename of the costmap.
         """
 
-        # Resolve the costmap path by removing unnecessary directory levels
+         # Resolve the costmap path by removing unnecessary directory levels
         script_directory = os.path.dirname(os.path.abspath(__file__))
+        print(script_directory)
         current_folder = os.path.basename(script_directory)
-        while current_folder != "build":  
+        while current_folder != "ws":  
             script_directory = os.path.dirname(script_directory)
             current_folder = os.path.basename(script_directory)
 
-        # Remove build at end of directory
-        script_directory = os.path.dirname(script_directory)
 
         costmap_path = os.path.join(script_directory, "src", "nav_visualization", "costmaps", costmap_file)
 
@@ -111,6 +111,8 @@ class PathPlanningVisualizer(Node):
         # Track the robot's path from the start position
         self.robot_path = [self.robot_position.copy()]
 
+        print("Initialized all variables")
+
     def grid_to_occupancy(self):
         """
         Converts the costmap into an OccupancyGrid message for ROS2.
@@ -133,6 +135,7 @@ class PathPlanningVisualizer(Node):
         # Convert the grid into occupancy data
         msg.data = [int(cell) for row in self.costmap for cell in row]
 
+
         return msg
 
     def send_goal(self):
@@ -142,9 +145,11 @@ class PathPlanningVisualizer(Node):
 
         # Get costmap filename from parameters
         costmap_file = self.get_parameter('costmap_file').get_parameter_value().string_value
+        print("Initalizing variables")
         self.variable_initiation(costmap_file)
 
         # Initialize Pygame for visualization
+        print("Initialized pygame")
         pygame.init()
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
         pygame.display.set_caption("ROS2 Costmap Visualization")

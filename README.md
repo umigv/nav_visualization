@@ -152,7 +152,7 @@ Located in the `launch/` directory and installed to `share/nav_visualization/lau
     *   **Usage:** Typically run alongside a separate launch of the `planner_server` node from `nav_infrastructure`.
         ```bash
         # Terminal 1: Launch planner server (example)
-        ros2 launch planner_server planner_server.launch.py # (Assuming configured params)
+        ros2 launch planner_server planner_server.launch.py # (You must run this with the isolate_path_planner set to true in nav_infrastructure/infra_launch/config/infra_params.yaml in order for it to work)
         # Terminal 2: Launch PP visualizer
         ros2 launch nav_visualization pp_vis.launch.py
         # Optionally override parameters:
